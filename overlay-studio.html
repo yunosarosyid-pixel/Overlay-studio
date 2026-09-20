@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Overlay Studio - OBS Overlay Generator</title>
+<style>
+  :root {
+    --bg0: #0f1115; --bg1: #171a21; --bg2: #1f232c;
+    --border: #2c313c; --border-strong: #3a4150;
+    --text-primary: #f2f3f5; --text-secondary: #a4acb9; --text-muted: #6b7280;
+    --accent: #22c55e; --accent-dark: #15803d;
+    --pink: #ec4899; --blue: #3b82f6; --amber: #f59e0b;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg0);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 20px; font-weight: 600; margin: 4px 0 2px; }
+  .sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 18px; }
+  .tab {
+    flex: 0 0 auto; padding: 9px 14px; border-radius: 999px;
+    background: var(--bg1); border: 1px solid var(--border);
+    color: var(--text-secondary); font-size: 13px; font-weight: 500;
+    cursor: pointer; white-space: nowrap; user-select: none;
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #06210f; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: 12.5px; color: var(--text-secondary); margin: 0 0 6px; font-weight: 500; }
+  .row { margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border-strong);
+    color: var(--text-primary); border-radius: 8px; padding: 10px 12px;
+    font-size: 14.5px; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+  input[type=color] {
+    width: 44px; height: 36px; border-radius: 8px; border: 1px solid var(--border-strong);
+    background: var(--bg2); padding: 2px; cursor: pointer;
+  }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .color-row { display: flex; align-items: center; gap: 10px; }
+  .color-row span { font-size: 13px; color: var(--text-muted); }
+  .hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.4; }
+  .range-val { font-size: 13px; color: var(--accent); font-weight: 600; float: right; }
+  .btn {
+    width: 100%; padding: 13px; border-radius: 10px; border: none;
+    background: var(--accent); color: #06210f; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 4px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .link-box {
+    background: var(--bg2); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; color: var(--text-secondary);
+    word-break: break-all; margin-top: 12px; font-family: monospace; display: none;
+    line-height: 1.5;
+  }
+  .link-box.show { display: block; }
+  .copied { color: var(--accent) !important; }
+  .preview-btn {
+    display: block; text-align: center; margin-top: 10px; padding: 11px;
+    border-radius: 10px; border: 1px solid var(--border-strong); color: var(--text-primary);
+    text-decoration: none; font-size: 14px; font-weight: 500; background: var(--bg2);
+  }
+  .obs-steps {
+    background: var(--bg1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-top: 24px;
+  }
+  .obs-steps h3 { font-size: 15px; margin: 0 0 10px; }
+  .obs-steps ol { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.9; }
+  .obs-steps b { color: var(--text-primary); }
+  .segment { display: flex; gap: 4px; background: var(--bg2); border-radius: 8px; padding: 3px; }
+  .segment button {
+    flex: 1; padding: 8px; border: none; border-radius: 6px; background: transparent;
+    color: var(--text-secondary); font-size: 13px; cursor: pointer; font-weight: 500;
+  }
+  .segment button.active { background: var(--bg0); color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<div id="editor" class="wrap">
+  <h1>Overlay Studio</h1>
+  <p class="sub">Atur overlay, salin link-nya, tempel sebagai <b>Browser Source</b> di OBS. Semua pengaturan tersimpan di dalam link itu sendiri.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="runningtext">Running text</div>
+    <div class="tab" data-tab="wa">Nomor WA</div>
+    <div class="tab" data-tab="bg">Background</div>
+    <div class="tab" data-tab="countdown">Countdown</div>
+    <div class="tab" data-tab="slot">Sisa slot</div>
+    <div class="tab" data-tab="trip">Info trip</div>
+    <div class="tab" data-tab="qr">QR code</div>
+    <div class="tab" data-tab="social">Social bar</div>
+    <div class="tab" data-tab="alert">Alert manual</div>
+    <div class="tab" data-tab="frame">Bingkai</div>
+    <div class="tab" data-tab="livebadge">Live badge</div>
+    <div class="tab" data-tab="camcircle">Kamera bulat</div>
+    <div class="tab" data-tab="splitline">Garis pemisah</div>
+  </div>
+
+  <!-- RUNNING TEXT -->
+  <div class="panel active" id="panel-runningtext">
+    <div class="card">
+      <div class="row">
+        <label>Teks berjalan</label>
+        <textarea id="rt-text">Selamat datang di live! Follow & subscribe ya 🙏 Jangan lupa share ke teman-teman</textarea>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="rt-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna background bar</label>
+          <div class="color-row"><input type="color" id="rt-bgcolor" value="#000000"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Transparansi background bar<span class="range-val" id="rt-opacity-val">70%</span></label>
+        <input type="range" id="rt-opacity" min="0" max="100" value="70">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Ukuran teks (px)</label>
+          <input type="number" id="rt-size" value="28" min="10" max="80">
+        </div>
+        <div>
+          <label>Kecepatan</label>
+          <select id="rt-speed">
+            <option value="35">Lambat</option>
+            <option value="20" selected>Sedang</option>
+            <option value="10">Cepat</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <div class="segment">
+          <button data-val="top" class="pos-btn">Atas</button>
+          <button data-val="bottom" class="pos-btn active">Bawah</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn" onclick="generateLink('runningtext')">Buat link overlay</button>
+    <div class="link-box" id="link-runningtext"></div>
+    <button class="preview-btn" id="preview-runningtext" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- WA -->
+  <div class="panel" id="panel-wa">
+    <div class="card">
+      <div class="row">
+        <label>Nomor WhatsApp (tampil sebagai teks)</label>
+        <input type="text" id="wa-number" placeholder="0812-3456-7890" value="0812-3456-7890">
+      </div>
+      <div class="row">
+        <label>Label kecil di atas nomor (opsional)</label>
+        <input type="text" id="wa-label" placeholder="Order via WA" value="Order via WhatsApp">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="wa-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna badge</label>
+          <div class="color-row"><input type="color" id="wa-bgcolor" value="#22c55e"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Efek</label>
+        <div class="segment">
+          <button data-val="pulse" class="wa-effect active">Berdenyut</button>
+          <button data-val="bounce" class="wa-effect">Memantul</button>
+          <button data-val="static" class="wa-effect">Diam</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="wa-pos">
+          <option value="bottom-right" selected>Kanan bawah</option>
+          <option value="bottom-left">Kiri bawah</option>
+          <option value="top-right">Kanan atas</option>
+          <option value="top-left">Kiri atas</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="generateLink('wa')">Buat link overlay</button>
+    <div class="link-box" id="link-wa"></div>
+    <button class="preview-btn" id="preview-wa" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- BG -->
+  <div class="panel" id="panel-bg">
+    <div class="card">
+      <div class="row">
+        <label>Gaya background</label>
+        <select id="bg-style">
+          <option value="particles">Partikel melayang</option>
+          <option value="gradient">Gradasi bergerak</option>
+          <option value="bokeh">Bokeh lingkaran</option>
+          <option value="grid">Grid neon bergerak</option>
+        </select>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna utama</label>
+          <div class="color-row"><input type="color" id="bg-color1" value="#22c55e"></div>
+        </div>
+        <div>
+          <label>Warna kedua</label>
+          <div class="color-row"><input type="color" id="bg-color2" value="#ec4899"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Kecepatan animasi<span class="range-val" id="bg-speed-val">Sedang</span></label>
+        <input type="range" id="bg-speed" min="1" max="3" value="2">
+      </div>
+      <div class="hint">Background ini transparan — cocok ditaruh sebagai layer paling belakang di OBS, di bawah kamera Anda.</div>
+    </div>
+    <button class="btn" onclick="generateLink('bg')">Buat link overlay</button>
+    <div class="link-box" id="link-bg"></div>
+    <button class="preview-btn" id="preview-bg" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="panel" id="panel-countdown">
+    <div class="card">
+      <div class="row">
+        <label>Judul kecil</label>
+        <input type="text" id="cd-title" value="Berangkat dalam">
+      </div>
+      <div class="row">
+        <label>Tanggal & jam target</label>
+        <input type="text" id="cd-target" placeholder="2026-10-05T06:00" value="">
+        <div class="hint">Format: YYYY-MM-DD lalu jam, misal 2026-10-05T06:00 (jam 6 pagi tgl 5 Okt 2026). Boleh diketik manual.</div>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="cd-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna badge</label>
+          <div class="color-row"><input type="color" id="cd-bgcolor" value="#15803d"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="cd-pos">
+          <option value="top-center" selected>Tengah atas</option>
+          <option value="top-right">Kanan atas</option>
+          <option value="top-left">Kiri atas</option>
+          <option value="bottom-center">Tengah bawah</option>
+        </select>
+      </div>
+      <div class="hint">Kalau waktu sudah lewat, overlay otomatis menampilkan "Trip sudah dimulai".</div>
+    </div>
+    <button class="btn" onclick="generateLink('countdown')">Buat link overlay</button>
+    <div class="link-box" id="link-countdown"></div>
+    <button class="preview-btn" id="preview-countdown" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- SLOT -->
+  <div class="panel" id="panel-slot">
+    <div class="card">
+      <div class="row two-col">
+        <div>
+          <label>Sisa slot</label>
+          <input type="number" id="slot-sisa" value="4" min="0">
+        </div>
+        <div>
+          <label>Total kuota</label>
+          <input type="number" id="slot-total" value="15" min="1">
+        </div>
+      </div>
+      <div class="row">
+        <label>Teks tambahan (opsional)</label>
+        <input type="text" id="slot-label" value="Slot pendakian tersisa">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="slot-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna badge</label>
+          <div class="color-row"><input type="color" id="slot-bgcolor" value="#d97706"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="slot-pos">
+          <option value="top-right" selected>Kanan atas</option>
+          <option value="top-left">Kiri atas</option>
+          <option value="bottom-right">Kanan bawah</option>
+          <option value="bottom-left">Kiri bawah</option>
+        </select>
+      </div>
+      <div class="hint">Angka sisa slot ini manual — ubah di sini lalu generate ulang link setiap kali slot berkurang.</div>
+    </div>
+    <button class="btn" onclick="generateLink('slot')">Buat link overlay</button>
+    <div class="link-box" id="link-slot"></div>
+    <button class="preview-btn" id="preview-slot" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- TRIP INFO (lower third) -->
+  <div class="panel" id="panel-trip">
+    <div class="card">
+      <div class="row">
+        <label>Nama gunung / trip</label>
+        <input type="text" id="trip-nama" value="Gunung Prau via Patak Banteng">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Tanggal</label>
+          <input type="text" id="trip-tanggal" value="5-6 Okt 2026">
+        </div>
+        <div>
+          <label>Harga</label>
+          <input type="text" id="trip-harga" value="Rp350.000">
+        </div>
+      </div>
+      <div class="row">
+        <label>Fasilitas singkat (opsional)</label>
+        <input type="text" id="trip-fasilitas" value="Termasuk: guide, tenda, makan 3x">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="trip-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna panel</label>
+          <div class="color-row"><input type="color" id="trip-bgcolor" value="#1e3a2f"></div>
+        </div>
+      </div>
+      <div class="hint">Muncul dari bawah lalu diam beberapa detik, cocok dipakai saat Anda menjelaskan detail trip.</div>
+    </div>
+    <button class="btn" onclick="generateLink('trip')">Buat link overlay</button>
+    <div class="link-box" id="link-trip"></div>
+    <button class="preview-btn" id="preview-trip" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- QR -->
+  <div class="panel" id="panel-qr">
+    <div class="card">
+      <div class="row">
+        <label>Isi QR (link pendaftaran / wa.me / dll)</label>
+        <input type="text" id="qr-data" value="https://wa.me/6281234567890">
+      </div>
+      <div class="row">
+        <label>Label di bawah QR</label>
+        <input type="text" id="qr-label" value="Scan untuk daftar">
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="qr-pos">
+          <option value="bottom-right" selected>Kanan bawah</option>
+          <option value="bottom-left">Kiri bawah</option>
+          <option value="top-right">Kanan atas</option>
+          <option value="top-left">Kiri atas</option>
+        </select>
+      </div>
+      <div class="hint">QR dibuat otomatis dari isi di atas, tampil dengan kotak putih agar mudah discan.</div>
+    </div>
+    <button class="btn" onclick="generateLink('qr')">Buat link overlay</button>
+    <div class="link-box" id="link-qr"></div>
+    <button class="preview-btn" id="preview-qr" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- SOCIAL BAR -->
+  <div class="panel" id="panel-social">
+    <div class="card">
+      <div class="row">
+        <label>Instagram</label>
+        <input type="text" id="soc-ig" value="@opentrip.id">
+      </div>
+      <div class="row">
+        <label>TikTok</label>
+        <input type="text" id="soc-tiktok" value="@opentrip.id">
+      </div>
+      <div class="row">
+        <label>WhatsApp</label>
+        <input type="text" id="soc-wa" value="0812-3456-7890">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="soc-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna bar</label>
+          <div class="color-row"><input type="color" id="soc-bgcolor" value="#0f172a"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="soc-pos">
+          <option value="top" selected>Bar atas</option>
+          <option value="bottom">Bar bawah</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="generateLink('social')">Buat link overlay</button>
+    <div class="link-box" id="link-social"></div>
+    <button class="preview-btn" id="preview-social" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- ALERT MANUAL -->
+  <div class="panel" id="panel-alert">
+    <div class="card">
+      <div class="row">
+        <label>Teks alert</label>
+        <input type="text" id="alert-text" value="Pendaftar baru masuk!">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="alert-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Warna badge</label>
+          <div class="color-row"><input type="color" id="alert-bgcolor" value="#ec4899"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Muncul selama (detik)</label>
+        <input type="number" id="alert-durasi" value="5" min="2" max="30">
+      </div>
+      <div class="hint">Beda dari overlay lain: overlay ini muncul di tengah, tampil sesuai durasi, lalu hilang otomatis. Gunakan tombol pratinjau untuk memicunya ulang tiap kali dibutuhkan — untuk OBS, buka source ini lalu klik "Tampilkan lagi" di pojok saat mau memicu manual.</div>
+    </div>
+    <button class="btn" onclick="generateLink('alert')">Buat link overlay</button>
+    <div class="link-box" id="link-alert"></div>
+    <button class="preview-btn" id="preview-alert" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- FRAME -->
+  <div class="panel" id="panel-frame">
+    <div class="card">
+      <div class="row">
+        <label>Warna bingkai</label>
+        <div class="color-row"><input type="color" id="frame-color" value="#22c55e"></div>
+      </div>
+      <div class="row">
+        <label>Gaya</label>
+        <select id="frame-style">
+          <option value="corners">Sudut saja</option>
+          <option value="full" selected>Garis penuh tepi</option>
+          <option value="sparkle">Garis + kilau bergerak</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Ketebalan (px)</label>
+        <input type="number" id="frame-thick" value="6" min="2" max="20">
+      </div>
+      <div class="hint">Taruh sebagai layer paling atas di OBS agar bingkai tampil mengelilingi seluruh tampilan live.</div>
+    </div>
+    <button class="btn" onclick="generateLink('frame')">Buat link overlay</button>
+    <div class="link-box" id="link-frame"></div>
+    <button class="preview-btn" id="preview-frame" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- LIVE BADGE -->
+  <div class="panel" id="panel-livebadge">
+    <div class="card">
+      <div class="row">
+        <label>Teks badge</label>
+        <input type="text" id="lb-text" value="Live di TikTok & YouTube">
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna teks</label>
+          <div class="color-row"><input type="color" id="lb-color" value="#111111"></div>
+        </div>
+        <div>
+          <label>Warna badge</label>
+          <div class="color-row"><input type="color" id="lb-bgcolor" value="#ffffff"></div>
+        </div>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="lb-pos">
+          <option value="top-center" selected>Tengah atas</option>
+          <option value="center">Tengah layar</option>
+          <option value="bottom-center">Tengah bawah</option>
+        </select>
+      </div>
+      <div class="hint">Badge kotak dengan ikon chat di kiri-kanan, mirip label "Live on Twitch" yang biasa dipakai untuk menandai simulcast.</div>
+    </div>
+    <button class="btn" onclick="generateLink('livebadge')">Buat link overlay</button>
+    <div class="link-box" id="link-livebadge"></div>
+    <button class="preview-btn" id="preview-livebadge" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- CAMERA CIRCLE -->
+  <div class="panel" id="panel-camcircle">
+    <div class="card">
+      <div class="row">
+        <label>Ukuran lingkaran</label>
+        <select id="cc-size">
+          <option value="180">Kecil</option>
+          <option value="260" selected>Sedang</option>
+          <option value="340">Besar</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Posisi</label>
+        <select id="cc-pos">
+          <option value="bottom-right" selected>Kanan bawah</option>
+          <option value="bottom-left">Kiri bawah</option>
+          <option value="top-right">Kanan atas</option>
+          <option value="top-left">Kiri atas</option>
+        </select>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna border</label>
+          <div class="color-row"><input type="color" id="cc-bordercolor" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Ketebalan border (px)</label>
+          <input type="number" id="cc-borderthick" value="6" min="2" max="20">
+        </div>
+      </div>
+      <div class="hint">Ini hanya bingkai lingkaran transparan di tengahnya. Di OBS, taruh source kamera Anda di bawah bingkai ini, lalu geser & sesuaikan ukurannya sampai wajah pas berada di dalam lingkaran.</div>
+    </div>
+    <button class="btn" onclick="generateLink('camcircle')">Buat link overlay</button>
+    <div class="link-box" id="link-camcircle"></div>
+    <button class="preview-btn" id="preview-camcircle" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <!-- SPLIT LINE -->
+  <div class="panel" id="panel-splitline">
+    <div class="card">
+      <div class="row">
+        <label>Posisi garis</label>
+        <select id="split-pos">
+          <option value="50" selected>Tengah (50%)</option>
+          <option value="40">Lebih ke atas (40%)</option>
+          <option value="60">Lebih ke bawah (60%)</option>
+        </select>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna garis</label>
+          <div class="color-row"><input type="color" id="split-color" value="#ffffff"></div>
+        </div>
+        <div>
+          <label>Ketebalan (px)</label>
+          <input type="number" id="split-thick" value="6" min="2" max="20">
+        </div>
+      </div>
+      <div class="hint">Garis horizontal membagi layar jadi dua area, seperti tampilan live dengan dua kamera bertumpuk (kamera wajah di atas, layar/produk di bawah). Taruh source kamera atas dan bawah sendiri di OBS, garis ini hanya pembatasnya, ditaruh di layer paling depan.</div>
+    </div>
+    <button class="btn" onclick="generateLink('splitline')">Buat link overlay</button>
+    <div class="link-box" id="link-splitline"></div>
+    <button class="preview-btn" id="preview-splitline" style="display:none">Lihat pratinjau</button>
+  </div>
+
+  <div class="obs-steps">
+    <h3>Cara pasang di OBS</h3>
+    <ol>
+      <li>Klik <b>Buat link overlay</b>, lalu <b>salin link</b> yang muncul.</li>
+      <li>Di OBS: <b>Sources</b> → tombol <b>+</b> → pilih <b>Browser</b>.</li>
+      <li>Tempel link tadi ke kolom <b>URL</b>.</li>
+      <li>Atur <b>Width</b> & <b>Height</b> sesuai ukuran vertical Anda, misalnya <b>1080 x 1920</b>.</li>
+      <li>Centang <b>Shutdown source when not visible</b> tidak perlu dicentang agar animasi tetap jalan.</li>
+      <li>Klik OK. Overlay langsung tampil transparan di atas kamera.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- OVERLAY RENDER TARGETS (hidden unless URL has ?ov=) -->
+<div id="ov-runningtext" style="display:none"></div>
+<div id="ov-wa" style="display:none"></div>
+<div id="ov-bg" style="display:none"></div>
+<div id="ov-countdown" style="display:none"></div>
+<div id="ov-slot" style="display:none"></div>
+<div id="ov-trip" style="display:none"></div>
+<div id="ov-qr" style="display:none"></div>
+<div id="ov-social" style="display:none"></div>
+<div id="ov-alert" style="display:none"></div>
+<div id="ov-frame" style="display:none"></div>
+<div id="ov-livebadge" style="display:none"></div>
+<div id="ov-camcircle" style="display:none"></div>
+<div id="ov-splitline" style="display:none"></div>
+
+<script>
+// ---------- TAB SWITCHING ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+  };
+});
+document.querySelectorAll('.pos-btn').forEach(b => {
+  b.onclick = () => { document.querySelectorAll('.pos-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+});
+document.querySelectorAll('.wa-effect').forEach(b => {
+  b.onclick = () => { document.querySelectorAll('.wa-effect').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+});
+document.getElementById('rt-opacity').oninput = e => document.getElementById('rt-opacity-val').textContent = e.target.value + '%';
+document.getElementById('bg-speed').oninput = e => {
+  const labels = {1:'Lambat', 2:'Sedang', 3:'Cepat'};
+  document.getElementById('bg-speed-val').textContent = labels[e.target.value];
+};
+
+function b64(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+function baseUrl() {
+  return location.origin + location.pathname;
+}
+
+function generateLink(type) {
+  const p = new URLSearchParams();
+  p.set('ov', type);
+
+  if (type === 'runningtext') {
+    p.set('text', b64(document.getElementById('rt-text').value || ' '));
+    p.set('color', document.getElementById('rt-color').value);
+    p.set('bgcolor', document.getElementById('rt-bgcolor').value);
+    p.set('opacity', document.getElementById('rt-opacity').value);
+    p.set('size', document.getElementById('rt-size').value);
+    p.set('speed', document.getElementById('rt-speed').value);
+    p.set('pos', document.querySelector('.pos-btn.active').dataset.val);
+  } else if (type === 'wa') {
+    p.set('number', b64(document.getElementById('wa-number').value || ''));
+    p.set('label', b64(document.getElementById('wa-label').value || ''));
+    p.set('color', document.getElementById('wa-color').value);
+    p.set('bgcolor', document.getElementById('wa-bgcolor').value);
+    p.set('effect', document.querySelector('.wa-effect.active').dataset.val);
+    p.set('pos', document.getElementById('wa-pos').value);
+  } else if (type === 'bg') {
+    p.set('style', document.getElementById('bg-style').value);
+    p.set('c1', document.getElementById('bg-color1').value);
+    p.set('c2', document.getElementById('bg-color2').value);
+    p.set('speed', document.getElementById('bg-speed').value);
+  } else if (type === 'countdown') {
+    p.set('title', b64(document.getElementById('cd-title').value || ''));
+    p.set('target', document.getElementById('cd-target').value || '');
+    p.set('color', document.getElementById('cd-color').value);
+    p.set('bgcolor', document.getElementById('cd-bgcolor').value);
+    p.set('pos', document.getElementById('cd-pos').value);
+  } else if (type === 'slot') {
+    p.set('sisa', document.getElementById('slot-sisa').value);
+    p.set('total', document.getElementById('slot-total').value);
+    p.set('label', b64(document.getElementById('slot-label').value || ''));
+    p.set('color', document.getElementById('slot-color').value);
+    p.set('bgcolor', document.getElementById('slot-bgcolor').value);
+    p.set('pos', document.getElementById('slot-pos').value);
+  } else if (type === 'trip') {
+    p.set('nama', b64(document.getElementById('trip-nama').value || ''));
+    p.set('tanggal', b64(document.getElementById('trip-tanggal').value || ''));
+    p.set('harga', b64(document.getElementById('trip-harga').value || ''));
+    p.set('fasilitas', b64(document.getElementById('trip-fasilitas').value || ''));
+    p.set('color', document.getElementById('trip-color').value);
+    p.set('bgcolor', document.getElementById('trip-bgcolor').value);
+  } else if (type === 'qr') {
+    p.set('data', b64(document.getElementById('qr-data').value || ''));
+    p.set('label', b64(document.getElementById('qr-label').value || ''));
+    p.set('pos', document.getElementById('qr-pos').value);
+  } else if (type === 'social') {
+    p.set('ig', b64(document.getElementById('soc-ig').value || ''));
+    p.set('tiktok', b64(document.getElementById('soc-tiktok').value || ''));
+    p.set('wa', b64(document.getElementById('soc-wa').value || ''));
+    p.set('color', document.getElementById('soc-color').value);
+    p.set('bgcolor', document.getElementById('soc-bgcolor').value);
+    p.set('pos', document.getElementById('soc-pos').value);
+  } else if (type === 'alert') {
+    p.set('text', b64(document.getElementById('alert-text').value || ''));
+    p.set('color', document.getElementById('alert-color').value);
+    p.set('bgcolor', document.getElementById('alert-bgcolor').value);
+    p.set('durasi', document.getElementById('alert-durasi').value);
+  } else if (type === 'frame') {
+    p.set('color', document.getElementById('frame-color').value);
+    p.set('style', document.getElementById('frame-style').value);
+    p.set('thick', document.getElementById('frame-thick').value);
+  } else if (type === 'livebadge') {
+    p.set('text', b64(document.getElementById('lb-text').value || ''));
+    p.set('color', document.getElementById('lb-color').value);
+    p.set('bgcolor', document.getElementById('lb-bgcolor').value);
+    p.set('pos', document.getElementById('lb-pos').value);
+  } else if (type === 'camcircle') {
+    p.set('size', document.getElementById('cc-size').value);
+    p.set('pos', document.getElementById('cc-pos').value);
+    p.set('bordercolor', document.getElementById('cc-bordercolor').value);
+    p.set('borderthick', document.getElementById('cc-borderthick').value);
+  } else if (type === 'splitline') {
+    p.set('splitpos', document.getElementById('split-pos').value);
+    p.set('color', document.getElementById('split-color').value);
+    p.set('thick', document.getElementById('split-thick').value);
+  }
+
+  const url = baseUrl() + '?' + p.toString();
+  const box = document.getElementById('link-' + type);
+  box.classList.add('show');
+  box.textContent = url;
+  box.onclick = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      box.classList.add('copied');
+      const old = box.textContent;
+      box.textContent = 'Tersalin! ' + old;
+      setTimeout(() => { box.textContent = old; box.classList.remove('copied'); }, 1500);
+    });
+  };
+  box.style.cursor = 'pointer';
+  box.title = 'Klik untuk salin';
+
+  const prevBtn = document.getElementById('preview-' + type);
+  prevBtn.style.display = 'block';
+  prevBtn.onclick = () => { location.href = url; };
+
+  // try clipboard immediately too
+  navigator.clipboard.writeText(url).catch(()=>{});
+}
+
+// ---------- OVERLAY RENDER MODE ----------
+(function() {
+  const params = new URLSearchParams(location.search);
+  const ov = params.get('ov');
+  if (!ov) return; // editor mode, do nothing more
+
+  document.getElementById('editor').style.display = 'none';
+  document.documentElement.style.background = 'transparent';
+  document.body.style.background = 'transparent';
+
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← Editor';
+  backBtn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;padding:8px 14px;border-radius:8px;border:1px solid #444;background:rgba(0,0,0,0.6);color:#fff;font-size:13px;font-family:sans-serif;';
+  backBtn.onclick = () => { location.href = baseUrl(); };
+  document.body.appendChild(backBtn);
+
+  function unb64(s) { try { return decodeURIComponent(escape(atob(s))); } catch(e) { return ''; } }
+
+  if (ov === 'runningtext') {
+    const el = document.getElementById('ov-runningtext');
+    el.style.display = 'block';
+    const text = unb64(params.get('text') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#000000';
+    const opacity = (parseInt(params.get('opacity') || '70')) / 100;
+    const size = params.get('size') || '28';
+    const speed = params.get('speed') || '20';
+    const pos = params.get('pos') || 'bottom';
+
+    function hexToRgba(hex, a) {
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+    }
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .rt-bar {
+          position: fixed; left:0; right:0; ${pos === 'top' ? 'top:0;' : 'bottom:0;'}
+          background: ${hexToRgba(bgcolor, opacity)};
+          padding: 14px 0;
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .rt-track {
+          display: inline-block;
+          white-space: nowrap;
+          animation: rt-scroll ${speed}s linear infinite;
+          font-size: ${size}px;
+          color: ${color};
+          font-family: -apple-system, sans-serif;
+          font-weight: 600;
+        }
+        @keyframes rt-scroll {
+          from { transform: translateX(100vw); }
+          to { transform: translateX(-100%); }
+        }
+      </style>
+      <div class="rt-bar"><div class="rt-track">${text.replace(/</g,'&lt;')}</div></div>
+    `;
+  }
+
+  if (ov === 'wa') {
+    const el = document.getElementById('ov-wa');
+    el.style.display = 'block';
+    const number = unb64(params.get('number') || '');
+    const label = unb64(params.get('label') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#22c55e';
+    const effect = params.get('effect') || 'pulse';
+    const pos = params.get('pos') || 'bottom-right';
+    const posCss = {
+      'bottom-right': 'bottom:40px; right:40px;',
+      'bottom-left': 'bottom:40px; left:40px;',
+      'top-right': 'top:40px; right:40px;',
+      'top-left': 'top:40px; left:40px;'
+    }[pos];
+
+    const animCss = effect === 'pulse'
+      ? 'animation: wa-pulse 1.6s ease-in-out infinite;'
+      : effect === 'bounce'
+      ? 'animation: wa-bounce 1.4s ease-in-out infinite;'
+      : '';
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .wa-badge {
+          position: fixed; ${posCss}
+          background: ${bgcolor};
+          color: ${color};
+          padding: 14px 22px;
+          border-radius: 16px;
+          font-family: -apple-system, sans-serif;
+          text-align: center;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+          ${animCss}
+        }
+        .wa-label { font-size: 13px; opacity: 0.9; font-weight: 500; margin-bottom: 2px; }
+        .wa-number { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
+        @keyframes wa-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        @keyframes wa-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+      </style>
+      <div class="wa-badge">
+        ${label ? `<div class="wa-label">${label.replace(/</g,'&lt;')}</div>` : ''}
+        <div class="wa-number">${number.replace(/</g,'&lt;')}</div>
+      </div>
+    `;
+  }
+
+  if (ov === 'bg') {
+    const el = document.getElementById('ov-bg');
+    el.style.display = 'block';
+    const style = params.get('style') || 'particles';
+    const c1 = params.get('c1') || '#22c55e';
+    const c2 = params.get('c2') || '#ec4899';
+    const speedRaw = parseInt(params.get('speed') || '2');
+    const dur = { 1: 18, 2: 10, 3: 5 }[speedRaw] || 10;
+
+    let inner = '';
+    if (style === 'particles') {
+      let dots = '';
+      for (let i = 0; i < 30; i++) {
+        const left = Math.random() * 100;
+        const size = 4 + Math.random() * 10;
+        const delay = Math.random() * dur;
+        const d = 6 + Math.random() * dur;
+        const color = i % 2 === 0 ? c1 : c2;
+        dots += `<div class="p" style="left:${left}vw;width:${size}px;height:${size}px;background:${color};animation-duration:${d}s;animation-delay:-${delay}s;"></div>`;
+      }
+      inner = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; background:transparent; width:100vw; height:100vh; }
+          .p { position:absolute; bottom:-20px; border-radius:50%; opacity:0.7; animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite; }
+          @keyframes floatUp {
+            from { transform: translateY(0) translateX(0); opacity:0; }
+            10% { opacity:0.7; }
+            90% { opacity:0.7; }
+            to { transform: translateY(-110vh) translateX(30px); opacity:0; }
+          }
+        </style>
+        <div style="position:fixed; inset:0;">${dots}</div>
+      `;
+    } else if (style === 'gradient') {
+      inner = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .g { position:fixed; inset:0; background: linear-gradient(120deg, ${c1}, ${c2}, ${c1}); background-size: 300% 300%; animation: gmove ${dur}s ease infinite; opacity:0.55; }
+          @keyframes gmove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        </style>
+        <div class="g"></div>
+      `;
+    } else if (style === 'bokeh') {
+      let circles = '';
+      for (let i = 0; i < 14; i++) {
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const size = 30 + Math.random() * 90;
+        const color = i % 2 === 0 ? c1 : c2;
+        const d = dur + Math.random() * dur;
+        const delay = Math.random() * dur;
+        circles += `<div class="bk" style="left:${left}vw;top:${top}vh;width:${size}px;height:${size}px;background:${color};animation-duration:${d}s;animation-delay:-${delay}s;"></div>`;
+      }
+      inner = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .bk { position:absolute; border-radius:50%; filter: blur(6px); opacity:0.35; animation-name: bkfloat; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+          @keyframes bkfloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(20px,-25px) scale(1.15); }
+          }
+        </style>
+        <div style="position:fixed; inset:0;">${circles}</div>
+      `;
+    } else if (style === 'grid') {
+      inner = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .grid {
+            position:fixed; inset:-50%; width:200%; height:200%;
+            background-image: linear-gradient(${c1}55 1px, transparent 1px), linear-gradient(90deg, ${c1}55 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridmove ${dur}s linear infinite;
+          }
+          @keyframes gridmove {
+            from { transform: translate(0,0); }
+            to { transform: translate(60px,60px); }
+          }
+        </style>
+        <div class="grid"></div>
+      `;
+    }
+    el.innerHTML = inner;
+  }
+
+  if (ov === 'countdown') {
+    const el = document.getElementById('ov-countdown');
+    el.style.display = 'block';
+    const title = unb64(params.get('title') || '');
+    const target = params.get('target') || '';
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#15803d';
+    const pos = params.get('pos') || 'top-center';
+    const posCss = {
+      'top-center': 'top:30px; left:50%; transform:translateX(-50%);',
+      'top-right': 'top:30px; right:30px;',
+      'top-left': 'top:30px; left:30px;',
+      'bottom-center': 'bottom:30px; left:50%; transform:translateX(-50%);'
+    }[pos];
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .cd-box {
+          position: fixed; ${posCss}
+          background: ${bgcolor}; color: ${color};
+          padding: 14px 24px; border-radius: 14px;
+          font-family: -apple-system, sans-serif; text-align: center;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+        }
+        .cd-title { font-size: 13px; opacity: 0.9; margin-bottom: 4px; font-weight: 500; }
+        .cd-time { font-size: 30px; font-weight: 700; letter-spacing: 0.5px; }
+      </style>
+      <div class="cd-box">
+        <div class="cd-title">${title.replace(/</g,'&lt;')}</div>
+        <div class="cd-time" id="cd-out">--:--:--:--</div>
+      </div>
+    `;
+    function tick() {
+      const out = document.getElementById('cd-out');
+      if (!out) return;
+      const t = new Date(target).getTime();
+      if (!target || isNaN(t)) { out.textContent = 'Segera'; return; }
+      const now = Date.now();
+      let diff = t - now;
+      if (diff <= 0) { out.textContent = 'Trip sudah dimulai'; return; }
+      const d = Math.floor(diff / 86400000); diff -= d*86400000;
+      const h = Math.floor(diff / 3600000); diff -= h*3600000;
+      const m = Math.floor(diff / 60000); diff -= m*60000;
+      const s = Math.floor(diff / 1000);
+      out.textContent = d + 'h ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  if (ov === 'slot') {
+    const el = document.getElementById('ov-slot');
+    el.style.display = 'block';
+    const sisa = params.get('sisa') || '0';
+    const total = params.get('total') || '0';
+    const label = unb64(params.get('label') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#d97706';
+    const pos = params.get('pos') || 'top-right';
+    const posCss = {
+      'top-right': 'top:30px; right:30px;',
+      'top-left': 'top:30px; left:30px;',
+      'bottom-right': 'bottom:30px; right:30px;',
+      'bottom-left': 'bottom:30px; left:30px;'
+    }[pos];
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .sl-box {
+          position: fixed; ${posCss}
+          background: ${bgcolor}; color: ${color};
+          padding: 12px 20px; border-radius: 14px;
+          font-family: -apple-system, sans-serif; text-align: center;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+          animation: sl-pulse 1.8s ease-in-out infinite;
+        }
+        .sl-label { font-size: 12px; opacity: 0.9; font-weight: 500; }
+        .sl-num { font-size: 26px; font-weight: 700; }
+        @keyframes sl-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.04); }
+        }
+      </style>
+      <div class="sl-box">
+        <div class="sl-label">${label.replace(/</g,'&lt;')}</div>
+        <div class="sl-num">${sisa} / ${total}</div>
+      </div>
+    `;
+  }
+
+  if (ov === 'trip') {
+    const el = document.getElementById('ov-trip');
+    el.style.display = 'block';
+    const nama = unb64(params.get('nama') || '');
+    const tanggal = unb64(params.get('tanggal') || '');
+    const harga = unb64(params.get('harga') || '');
+    const fasilitas = unb64(params.get('fasilitas') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#1e3a2f';
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .lt-wrap { position: fixed; left:0; right:0; bottom:60px; display:flex; justify-content:center; }
+        .lt-box {
+          background: ${bgcolor}; color: ${color};
+          padding: 16px 26px; border-radius: 14px; max-width: 90vw;
+          font-family: -apple-system, sans-serif;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+          animation: lt-in 0.6s ease-out;
+          text-align: center;
+        }
+        .lt-nama { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .lt-meta { font-size: 15px; opacity: 0.9; margin-bottom: 2px; }
+        .lt-fasilitas { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+        @keyframes lt-in {
+          from { transform: translateY(40px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      </style>
+      <div class="lt-wrap">
+        <div class="lt-box">
+          <div class="lt-nama">${nama.replace(/</g,'&lt;')}</div>
+          <div class="lt-meta">${tanggal.replace(/</g,'&lt;')} &middot; ${harga.replace(/</g,'&lt;')}</div>
+          ${fasilitas ? `<div class="lt-fasilitas">${fasilitas.replace(/</g,'&lt;')}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  if (ov === 'qr') {
+    const el = document.getElementById('ov-qr');
+    el.style.display = 'block';
+    const data = unb64(params.get('data') || '');
+    const label = unb64(params.get('label') || '');
+    const pos = params.get('pos') || 'bottom-right';
+    const posCss = {
+      'bottom-right': 'bottom:40px; right:40px;',
+      'bottom-left': 'bottom:40px; left:40px;',
+      'top-right': 'top:40px; right:40px;',
+      'top-left': 'top:40px; left:40px;'
+    }[pos];
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .qr-box {
+          position: fixed; ${posCss}
+          background: #ffffff; padding: 12px; border-radius: 14px;
+          text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+          font-family: -apple-system, sans-serif;
+        }
+        .qr-label { font-size: 12px; color: #111; font-weight: 600; margin-top: 6px; }
+      </style>
+      <div class="qr-box">
+        <div id="qr-canvas"></div>
+        ${label ? `<div class="qr-label">${label.replace(/</g,'&lt;')}</div>` : ''}
+      </div>
+    `;
+    const qrScript = document.createElement('script');
+    qrScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    qrScript.onload = () => {
+      new QRCode(document.getElementById('qr-canvas'), { text: data || ' ', width: 140, height: 140 });
+    };
+    document.body.appendChild(qrScript);
+  }
+
+  if (ov === 'social') {
+    const el = document.getElementById('ov-social');
+    el.style.display = 'block';
+    const ig = unb64(params.get('ig') || '');
+    const tiktok = unb64(params.get('tiktok') || '');
+    const wa = unb64(params.get('wa') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#0f172a';
+    const pos = params.get('pos') || 'top';
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .sb-bar {
+          position: fixed; left:0; right:0; ${pos === 'top' ? 'top:0;' : 'bottom:0;'}
+          background: ${bgcolor}; color: ${color};
+          padding: 10px 0; display:flex; justify-content:center; gap:28px;
+          font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600;
+        }
+        .sb-item { display:flex; align-items:center; gap:6px; }
+      </style>
+      <div class="sb-bar">
+        ${ig ? `<div class="sb-item">IG ${ig.replace(/</g,'&lt;')}</div>` : ''}
+        ${tiktok ? `<div class="sb-item">TikTok ${tiktok.replace(/</g,'&lt;')}</div>` : ''}
+        ${wa ? `<div class="sb-item">WA ${wa.replace(/</g,'&lt;')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  if (ov === 'alert') {
+    const el = document.getElementById('ov-alert');
+    el.style.display = 'block';
+    const text = unb64(params.get('text') || '');
+    const color = params.get('color') || '#ffffff';
+    const bgcolor = params.get('bgcolor') || '#ec4899';
+    const durasi = parseInt(params.get('durasi') || '5');
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .al-wrap { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .al-box {
+          background: ${bgcolor}; color: ${color};
+          padding: 18px 32px; border-radius: 16px;
+          font-family: -apple-system, sans-serif; font-size: 22px; font-weight: 700;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+          animation: al-pop 0.5s ease-out, al-out 0.5s ease-in ${durasi}s forwards;
+        }
+        @keyframes al-pop {
+          from { transform: scale(0.7); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes al-out {
+          from { transform: scale(1); opacity: 1; }
+          to { transform: scale(0.85); opacity: 0; }
+        }
+        .al-retrigger {
+          position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+          padding: 6px 12px; border-radius: 8px; background: rgba(0,0,0,0.5);
+          color: #fff; font-size: 12px; font-family: sans-serif; border: 1px solid #555;
+        }
+      </style>
+      <div class="al-wrap" id="al-wrap"><div class="al-box" id="al-box">${text.replace(/</g,'&lt;')}</div></div>
+      <button class="al-retrigger" id="al-retrigger">Tampilkan lagi</button>
+    `;
+    document.getElementById('al-retrigger').onclick = () => {
+      const wrap = document.getElementById('al-wrap');
+      wrap.innerHTML = `<div class="al-box" style="background:${bgcolor};color:${color};padding:18px 32px;border-radius:16px;font-family:-apple-system, sans-serif;font-size:22px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,0.4);animation:al-pop 0.5s ease-out, al-out 0.5s ease-in ${durasi}s forwards;">${text.replace(/</g,'&lt;')}</div>`;
+    };
+  }
+
+  if (ov === 'frame') {
+    const el = document.getElementById('ov-frame');
+    el.style.display = 'block';
+    const color = params.get('color') || '#22c55e';
+    const style = params.get('style') || 'full';
+    const thick = params.get('thick') || '6';
+
+    let borderCss = '';
+    let sparkleHtml = '';
+    if (style === 'corners') {
+      el.innerHTML = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .fr-corner { position: fixed; width: 60px; height: 60px; border-color: ${color}; border-style: solid; }
+          .fr-tl { top:10px; left:10px; border-width:${thick}px 0 0 ${thick}px; }
+          .fr-tr { top:10px; right:10px; border-width:${thick}px ${thick}px 0 0; }
+          .fr-bl { bottom:10px; left:10px; border-width:0 0 ${thick}px ${thick}px; }
+          .fr-br { bottom:10px; right:10px; border-width:0 ${thick}px ${thick}px 0; }
+        </style>
+        <div class="fr-corner fr-tl"></div><div class="fr-corner fr-tr"></div>
+        <div class="fr-corner fr-bl"></div><div class="fr-corner fr-br"></div>
+      `;
+    } else if (style === 'sparkle') {
+      el.innerHTML = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .fr-full { position: fixed; inset: 0; border: ${thick}px solid ${color}; box-sizing: border-box; }
+          .fr-glow { position: fixed; inset: 0; border: ${thick}px solid ${color}; box-sizing: border-box; opacity: 0.5; animation: fr-glow 2s ease-in-out infinite; filter: blur(4px); }
+          @keyframes fr-glow {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.75; }
+          }
+        </style>
+        <div class="fr-full"></div><div class="fr-glow"></div>
+      `;
+    } else {
+      el.innerHTML = `
+        <style>
+          html, body { margin:0; padding:0; overflow:hidden; }
+          .fr-full { position: fixed; inset: 0; border: ${thick}px solid ${color}; box-sizing: border-box; }
+        </style>
+        <div class="fr-full"></div>
+      `;
+    }
+  }
+
+  if (ov === 'livebadge') {
+    const el = document.getElementById('ov-livebadge');
+    el.style.display = 'block';
+    const text = unb64(params.get('text') || '');
+    const color = params.get('color') || '#111111';
+    const bgcolor = params.get('bgcolor') || '#ffffff';
+    const pos = params.get('pos') || 'top-center';
+    const posCss = {
+      'top-center': 'top:30px; left:50%; transform:translateX(-50%);',
+      'center': 'top:50%; left:50%; transform:translate(-50%,-50%);',
+      'bottom-center': 'bottom:30px; left:50%; transform:translateX(-50%);'
+    }[pos];
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .lb-badge {
+          position: fixed; ${posCss}
+          background: ${bgcolor}; color: ${color};
+          padding: 12px 22px; border-radius: 999px;
+          font-family: -apple-system, sans-serif; font-size: 16px; font-weight: 700;
+          display: flex; align-items: center; gap: 10px;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .lb-icon { font-size: 18px; }
+      </style>
+      <div class="lb-badge">
+        <span class="lb-icon">&#128172;</span>
+        <span>${text.replace(/</g,'&lt;')}</span>
+        <span class="lb-icon">&#128172;</span>
+      </div>
+    `;
+  }
+
+  if (ov === 'camcircle') {
+    const el = document.getElementById('ov-camcircle');
+    el.style.display = 'block';
+    const size = params.get('size') || '260';
+    const pos = params.get('pos') || 'bottom-right';
+    const bordercolor = params.get('bordercolor') || '#ffffff';
+    const borderthick = params.get('borderthick') || '6';
+    const posCss = {
+      'bottom-right': 'bottom:40px; right:40px;',
+      'bottom-left': 'bottom:40px; left:40px;',
+      'top-right': 'top:40px; right:40px;',
+      'top-left': 'top:40px; left:40px;'
+    }[pos];
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .cc-ring {
+          position: fixed; ${posCss}
+          width: ${size}px; height: ${size}px; border-radius: 50%;
+          border: ${borderthick}px solid ${bordercolor};
+          box-sizing: border-box;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+      </style>
+      <div class="cc-ring"></div>
+    `;
+  }
+
+  if (ov === 'splitline') {
+    const el = document.getElementById('ov-splitline');
+    el.style.display = 'block';
+    const splitpos = params.get('splitpos') || '50';
+    const color = params.get('color') || '#ffffff';
+    const thick = params.get('thick') || '6';
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .sp-line {
+          position: fixed; left: 0; right: 0; top: ${splitpos}%;
+          height: ${thick}px; background: ${color};
+          transform: translateY(-50%);
+          box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+      </style>
+      <div class="sp-line"></div>
+    `;
+  }
+})();
+</script>
+
+</body>
+</html>
