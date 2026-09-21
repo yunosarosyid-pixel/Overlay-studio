@@ -622,7 +622,7 @@
           </select>
         </div>
       </div>
-      <div class="hint">Huruf digambar berulang-ulang di atas latar transparan, cocok untuk judul pembuka live atau logo animasi. Ukuran huruf otomatis mengecil kalau kata terlalu panjang untuk lebar layar.</div>
+      <div class="hint">Latar transparan. Huruf mengecil otomatis kalau katanya terlalu panjang untuk lebar layar.</div>
     </div>
     <button class="btn" onclick="generateLink('animtitle')">Buat link overlay</button>
     <div class="link-box" id="link-animtitle"></div>
@@ -795,6 +795,50 @@ function generateLink(type) {
   // try clipboard immediately too
   navigator.clipboard.writeText(url).catch(()=>{});
 }
+
+// ---------- EDITOR STATE (bertahan setelah pratinjau dan refresh) ----------
+(function() {
+  if (new URLSearchParams(location.search).get('ov')) return;
+  const KEY = 'overlay-studio-state-v1';
+  const controls = () => document.querySelectorAll('#editor input[id], #editor select[id], #editor textarea[id]');
+  const groupValue = sel => { const b = document.querySelector(sel + '.active'); return b ? b.dataset.val : null; };
+
+  function save() {
+    const tab = document.querySelector('.tab.active');
+    const state = { tab: tab ? tab.dataset.tab : null, fields: {}, pos: groupValue('.pos-btn'), effect: groupValue('.wa-effect') };
+    controls().forEach(el => { state.fields[el.id] = el.value; });
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function restore() {
+    let state;
+    try { state = JSON.parse(localStorage.getItem(KEY)); } catch (e) { return; }
+    if (!state || typeof state !== 'object') return;
+    controls().forEach(el => {
+      const v = state.fields && state.fields[el.id];
+      if (typeof v !== 'string') return;
+      if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === v)) return;
+      el.value = v;
+      if (el.type === 'range' && el.oninput) el.oninput({ target: el });
+    });
+    [['.pos-btn', state.pos], ['.wa-effect', state.effect]].forEach(([sel, val]) => {
+      const btn = val && document.querySelector(sel + '[data-val="' + val + '"]');
+      if (!btn) return;
+      document.querySelectorAll(sel).forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    const tab = state.tab && document.querySelector('.tab[data-tab="' + state.tab + '"]');
+    if (tab) {
+      tab.click();
+      tab.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
+  }
+
+  restore();
+  document.addEventListener('input', save);
+  document.addEventListener('change', save);
+  document.addEventListener('click', e => { if (e.target.closest('.tab, .segment button')) save(); });
+})();
 
 // ---------- OVERLAY RENDER MODE ----------
 (function() {
