@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Overlay Studio - OBS Overlay Generator</title>
+<title>Overlay Studio - OBS Overlay Generator Pro</title>
 <style>
   :root {
     --bg0: #0f1115; --bg1: #171a21; --bg2: #1f232c;
@@ -22,17 +22,21 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
-  h1 { font-size: 20px; font-weight: 600; margin: 4px 0 2px; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 22px; font-weight: 700; margin: 4px 0 2px; color: #fff; display: flex; align-items: center; gap: 8px; }
   .sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
-  .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 18px; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; scrollbar-width: thin; }
   .tab {
     flex: 0 0 auto; padding: 9px 14px; border-radius: 999px;
     background: var(--bg1); border: 1px solid var(--border);
     color: var(--text-secondary); font-size: 13px; font-weight: 500;
-    cursor: pointer; white-space: nowrap; user-select: none;
+    cursor: pointer; white-space: nowrap; user-select: none; transition: all 0.2s;
   }
-  .tab.active { background: var(--accent); border-color: var(--accent); color: #06210f; }
+  .tab:hover { border-color: var(--border-strong); color: #fff; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #06210f; font-weight: 600; }
+  .tab.save-tab { background: #1e293b; border-color: #3b82f6; color: #60a5fa; }
+  .tab.save-tab.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  
   .panel { display: none; }
   .panel.active { display: block; }
   .card {
@@ -45,11 +49,12 @@
   input[type=text], input[type=number], select, textarea {
     width: 100%; background: var(--bg2); border: 1px solid var(--border-strong);
     color: var(--text-primary); border-radius: 8px; padding: 10px 12px;
-    font-size: 14.5px; font-family: inherit;
+    font-size: 14.5px; font-family: inherit; outline: none; transition: border-color 0.2s;
   }
+  input[type=text]:focus, select:focus, textarea:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
   input[type=color] {
-    width: 44px; height: 36px; border-radius: 8px; border: 1px solid var(--border-strong);
+    width: 48px; height: 38px; border-radius: 8px; border: 1px solid var(--border-strong);
     background: var(--bg2); padding: 2px; cursor: pointer;
   }
   input[type=range] { width: 100%; accent-color: var(--accent); }
@@ -61,9 +66,16 @@
   .btn {
     width: 100%; padding: 13px; border-radius: 10px; border: none;
     background: var(--accent); color: #06210f; font-size: 15px; font-weight: 600;
-    cursor: pointer; margin-top: 4px;
+    cursor: pointer; margin-top: 4px; transition: transform 0.1s, background 0.2s;
   }
+  .btn:hover { opacity: 0.95; }
   .btn:active { transform: scale(0.98); }
+  .btn-sec {
+    background: var(--bg2); color: var(--text-primary); border: 1px solid var(--border-strong);
+    padding: 10px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer;
+  }
+  .btn-danger { background: #ef4444; color: #fff; border: none; }
+  
   .link-box {
     background: var(--bg2); border: 1px solid var(--border-strong); border-radius: 8px;
     padding: 10px 12px; font-size: 12px; color: var(--text-secondary);
@@ -71,7 +83,7 @@
     line-height: 1.5;
   }
   .link-box.show { display: block; }
-  .copied { color: var(--accent) !important; }
+  .copied { color: var(--accent) !important; font-weight: 600; }
   .preview-btn {
     display: block; text-align: center; margin-top: 10px; padding: 11px;
     border-radius: 10px; border: 1px solid var(--border-strong); color: var(--text-primary);
@@ -89,14 +101,23 @@
     flex: 1; padding: 8px; border: none; border-radius: 6px; background: transparent;
     color: var(--text-secondary); font-size: 13px; cursor: pointer; font-weight: 500;
   }
-  .segment button.active { background: var(--bg0); color: var(--text-primary); }
+  .segment button.active { background: var(--bg0); color: var(--text-primary); font-weight: 600; }
+  
+  /* Preset Manager Item */
+  .preset-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg2); padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .preset-item-name { font-weight: 600; font-size: 14px; }
+  .preset-actions { display: flex; gap: 6px; }
 </style>
 </head>
 <body>
 
 <div id="editor" class="wrap">
-  <h1>Overlay Studio</h1>
-  <p class="sub">Atur overlay, salin link-nya, tempel sebagai <b>Browser Source</b> di OBS. Semua pengaturan tersimpan di dalam link itu sendiri.</p>
+  <h1>✨ Overlay Studio Pro</h1>
+  <p class="sub">Atur overlay visual OBS, salin link-nya, dan tempel sebagai <b>Browser Source</b> di OBS.</p>
 
   <div class="tabs">
     <div class="tab active" data-tab="runningtext">Running text</div>
@@ -113,6 +134,7 @@
     <div class="tab" data-tab="camcircle">Kamera bulat</div>
     <div class="tab" data-tab="splitline">Garis pemisah</div>
     <div class="tab" data-tab="animtitle">Judul animasi</div>
+    <div class="tab save-tab" data-tab="preset">💾 Preset & Simpan</div>
   </div>
 
   <!-- RUNNING TEXT -->
@@ -185,10 +207,11 @@
         </div>
       </div>
       <div class="row">
-        <label>Efek</label>
+        <label>Efek Animasi</label>
         <div class="segment">
           <button data-val="pulse" class="wa-effect active">Berdenyut</button>
           <button data-val="bounce" class="wa-effect">Memantul</button>
+          <button data-val="glow" class="wa-effect">Glow Ripple</button>
           <button data-val="static" class="wa-effect">Diam</button>
         </div>
       </div>
@@ -250,7 +273,7 @@
       <div class="row">
         <label>Tanggal & jam target</label>
         <input type="text" id="cd-target" placeholder="2026-10-05T06:00" value="">
-        <div class="hint">Format: YYYY-MM-DD lalu jam, misal 2026-10-05T06:00 (jam 6 pagi tgl 5 Okt 2026). Boleh diketik manual.</div>
+        <div class="hint">Format: YYYY-MM-DD lalu jam, misal 2026-10-05T06:00 (jam 6 pagi tgl 5 Okt 2026).</div>
       </div>
       <div class="row two-col">
         <div>
@@ -271,7 +294,6 @@
           <option value="bottom-center">Tengah bawah</option>
         </select>
       </div>
-      <div class="hint">Kalau waktu sudah lewat, overlay otomatis menampilkan "Trip sudah dimulai".</div>
     </div>
     <button class="btn" onclick="generateLink('countdown')">Buat link overlay</button>
     <div class="link-box" id="link-countdown"></div>
@@ -314,14 +336,13 @@
           <option value="bottom-left">Kiri bawah</option>
         </select>
       </div>
-      <div class="hint">Angka sisa slot ini manual — ubah di sini lalu generate ulang link setiap kali slot berkurang.</div>
     </div>
     <button class="btn" onclick="generateLink('slot')">Buat link overlay</button>
     <div class="link-box" id="link-slot"></div>
     <button class="preview-btn" id="preview-slot" style="display:none">Lihat pratinjau</button>
   </div>
 
-  <!-- TRIP INFO (lower third) -->
+  <!-- TRIP INFO -->
   <div class="panel" id="panel-trip">
     <div class="card">
       <div class="row">
@@ -352,7 +373,6 @@
           <div class="color-row"><input type="color" id="trip-bgcolor" value="#1e3a2f"></div>
         </div>
       </div>
-      <div class="hint">Muncul dari bawah lalu diam beberapa detik, cocok dipakai saat Anda menjelaskan detail trip.</div>
     </div>
     <button class="btn" onclick="generateLink('trip')">Buat link overlay</button>
     <div class="link-box" id="link-trip"></div>
@@ -379,7 +399,6 @@
           <option value="top-left">Kiri atas</option>
         </select>
       </div>
-      <div class="hint">QR dibuat otomatis dari isi di atas, tampil dengan kotak putih agar mudah discan.</div>
     </div>
     <button class="btn" onclick="generateLink('qr')">Buat link overlay</button>
     <div class="link-box" id="link-qr"></div>
@@ -445,7 +464,6 @@
         <label>Muncul selama (detik)</label>
         <input type="number" id="alert-durasi" value="5" min="2" max="30">
       </div>
-      <div class="hint">Beda dari overlay lain: overlay ini muncul di tengah, tampil sesuai durasi, lalu hilang otomatis. Gunakan tombol pratinjau untuk memicunya ulang tiap kali dibutuhkan — untuk OBS, buka source ini lalu klik "Tampilkan lagi" di pojok saat mau memicu manual.</div>
     </div>
     <button class="btn" onclick="generateLink('alert')">Buat link overlay</button>
     <div class="link-box" id="link-alert"></div>
@@ -460,7 +478,7 @@
         <div class="color-row"><input type="color" id="frame-color" value="#22c55e"></div>
       </div>
       <div class="row">
-        <label>Gaya</label>
+        <label>Gaya Bingkai</label>
         <select id="frame-style">
           <option value="corners">Sudut saja</option>
           <option value="full" selected>Garis penuh tepi</option>
@@ -471,7 +489,6 @@
         <label>Ketebalan (px)</label>
         <input type="number" id="frame-thick" value="6" min="2" max="20">
       </div>
-      <div class="hint">Taruh sebagai layer paling atas di OBS agar bingkai tampil mengelilingi seluruh tampilan live.</div>
     </div>
     <button class="btn" onclick="generateLink('frame')">Buat link overlay</button>
     <div class="link-box" id="link-frame"></div>
@@ -503,7 +520,7 @@
           <option value="bottom-center">Tengah bawah</option>
         </select>
       </div>
-      <div class="hint">Badge kotak dengan ikon chat di kiri-kanan, mirip label "Live on Twitch" yang biasa dipakai untuk menandai simulcast.</div>
+      <div class="hint">Memiliki ikon titik merah berkedip khas siaran LIVE / REC otomatis di sebelah teks.</div>
     </div>
     <button class="btn" onclick="generateLink('livebadge')">Buat link overlay</button>
     <div class="link-box" id="link-livebadge"></div>
@@ -516,9 +533,18 @@
       <div class="row">
         <label>Ukuran lingkaran</label>
         <select id="cc-size">
-          <option value="180">Kecil</option>
-          <option value="260" selected>Sedang</option>
-          <option value="340">Besar</option>
+          <option value="180">Kecil (180px)</option>
+          <option value="260" selected>Sedang (260px)</option>
+          <option value="340">Besar (340px)</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>Gaya Animasi Ring</label>
+        <select id="cc-anim">
+          <option value="glow-spin" selected>✨ Neon Glow Spin (Berputar)</option>
+          <option value="cyber-tech">🌐 Cyber Tech Ring (Dashed Spin)</option>
+          <option value="pulse-wave">🌊 Pulse Wave (Berdenyut)</option>
+          <option value="static">⏸️ Statis Elegan</option>
         </select>
       </div>
       <div class="row">
@@ -533,14 +559,13 @@
       <div class="row two-col">
         <div>
           <label>Warna border</label>
-          <div class="color-row"><input type="color" id="cc-bordercolor" value="#ffffff"></div>
+          <div class="color-row"><input type="color" id="cc-bordercolor" value="#22c55e"></div>
         </div>
         <div>
           <label>Ketebalan border (px)</label>
           <input type="number" id="cc-borderthick" value="6" min="2" max="20">
         </div>
       </div>
-      <div class="hint">Ini hanya bingkai lingkaran transparan di tengahnya. Di OBS, taruh source kamera Anda di bawah bingkai ini, lalu geser & sesuaikan ukurannya sampai wajah pas berada di dalam lingkaran.</div>
     </div>
     <button class="btn" onclick="generateLink('camcircle')">Buat link overlay</button>
     <div class="link-box" id="link-camcircle"></div>
@@ -550,6 +575,15 @@
   <!-- SPLIT LINE -->
   <div class="panel" id="panel-splitline">
     <div class="card">
+      <div class="row">
+        <label>Gaya Animasi Garis Pemisah</label>
+        <select id="split-anim">
+          <option value="laser-beam" selected>⚡ Laser Sweep (Cahaya Jalan)</option>
+          <option value="rgb-flow">🌈 RGB Gradient Flow</option>
+          <option value="neon-pulse">🔮 Neon Glow Pulse</option>
+          <option value="static">⏸️ Garis Solid Statis</option>
+        </select>
+      </div>
       <div class="row">
         <label>Posisi garis</label>
         <select id="split-pos">
@@ -561,14 +595,13 @@
       <div class="row two-col">
         <div>
           <label>Warna garis</label>
-          <div class="color-row"><input type="color" id="split-color" value="#ffffff"></div>
+          <div class="color-row"><input type="color" id="split-color" value="#3b82f6"></div>
         </div>
         <div>
           <label>Ketebalan (px)</label>
           <input type="number" id="split-thick" value="6" min="2" max="20">
         </div>
       </div>
-      <div class="hint">Garis horizontal membagi layar jadi dua area, seperti tampilan live dengan dua kamera bertumpuk (kamera wajah di atas, layar/produk di bawah). Taruh source kamera atas dan bawah sendiri di OBS, garis ini hanya pembatasnya, ditaruh di layer paling depan.</div>
     </div>
     <button class="btn" onclick="generateLink('splitline')">Buat link overlay</button>
     <div class="link-box" id="link-splitline"></div>
@@ -581,26 +614,26 @@
       <div class="row">
         <label>Teks judul</label>
         <input type="text" id="at-text" value="CITO ADVENTURE" maxlength="30" autocomplete="off">
-        <div class="hint">Hanya huruf A sampai Z dan spasi. Setiap kata tampil di baris sendiri.</div>
+        <div class="hint">Huruf A sampai Z dan spasi.</div>
       </div>
       <div class="row">
         <label>Tema warna</label>
         <select id="at-theme">
-          <option value="0" selected>Asli</option>
-          <option value="1">Laut</option>
-          <option value="2">Sunset</option>
-          <option value="3">Neon</option>
-          <option value="4">Hutan</option>
-          <option value="5">Kustom (pakai dua warna di bawah)</option>
+          <option value="0">Asli (Ungu - Biru)</option>
+          <option value="1">Laut (Biru - Cyan)</option>
+          <option value="2">Sunset (Oranye - Merah)</option>
+          <option value="3">Neon (Hijau - Pink)</option>
+          <option value="4">Hutan (Hijau Zaitun)</option>
+          <option value="5" selected>🎨 Kustom (Pakai 2 warna di bawah)</option>
         </select>
       </div>
       <div class="row two-col">
         <div>
-          <label>Warna awal (tema Kustom)</label>
+          <label>Warna awal (Kustom)</label>
           <div class="color-row"><input type="color" id="at-c1" value="#973bed"></div>
         </div>
         <div>
-          <label>Warna akhir (tema Kustom)</label>
+          <label>Warna akhir (Kustom)</label>
           <div class="color-row"><input type="color" id="at-c2" value="#007cff"></div>
         </div>
       </div>
@@ -622,27 +655,57 @@
           </select>
         </div>
       </div>
-      <div class="hint">Latar transparan. Huruf mengecil otomatis kalau katanya terlalu panjang untuk lebar layar.</div>
     </div>
     <button class="btn" onclick="generateLink('animtitle')">Buat link overlay</button>
     <div class="link-box" id="link-animtitle"></div>
     <button class="preview-btn" id="preview-animtitle" style="display:none">Lihat pratinjau</button>
   </div>
 
+  <!-- PRESET & SIMPAN PANEL -->
+  <div class="panel" id="panel-preset">
+    <div class="card">
+      <h3>💾 Manajemen Preset Pengaturan</h3>
+      <p class="hint" style="margin-bottom:12px;">Simpan semua pengaturan form Anda menjadi nama preset khusus untuk kebutuhan live streaming yang berbeda-beda.</p>
+      
+      <div class="row">
+        <label>Nama Preset Baru</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="preset-name-input" placeholder="Misal: Live Gaming / Trip Prau">
+          <button class="btn-sec" style="white-space:nowrap; background:var(--accent); color:#000; font-weight:600;" onclick="saveCurrentPreset()">Simpan Preset</button>
+        </div>
+      </div>
+      
+      <hr style="border:0; border-top:1px solid var(--border); margin:16px 0;">
+      
+      <label>Daftar Preset Tersimpan</label>
+      <div id="preset-list-container">
+        <div class="hint">Belum ada preset tersimpan.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📥 Impor / Ekspor Konfigurasi</h3>
+      <div class="row two-col">
+        <button class="btn-sec" onclick="exportPresetsJSON()">Ekspor JSON</button>
+        <button class="btn-sec" onclick="document.getElementById('import-file-input').click()">Impor JSON</button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importPresetsJSON(event)">
+      </div>
+    </div>
+  </div>
+
   <div class="obs-steps">
-    <h3>Cara pasang di OBS</h3>
+    <h3>Cara pasang di OBS Studio</h3>
     <ol>
       <li>Klik <b>Buat link overlay</b>, lalu <b>salin link</b> yang muncul.</li>
-      <li>Di OBS: <b>Sources</b> → tombol <b>+</b> → pilih <b>Browser</b>.</li>
+      <li>Di OBS: <b>Sources</b> → tombol <b>+</b> → pilih <b>Browser Source</b>.</li>
       <li>Tempel link tadi ke kolom <b>URL</b>.</li>
-      <li>Atur <b>Width</b> & <b>Height</b> sesuai ukuran vertical Anda, misalnya <b>1080 x 1920</b>.</li>
-      <li>Centang <b>Shutdown source when not visible</b> tidak perlu dicentang agar animasi tetap jalan.</li>
-      <li>Klik OK. Overlay langsung tampil transparan di atas kamera.</li>
+      <li>Atur <b>Width</b> & <b>Height</b> sesuai canvas Anda (misal <b>1080 x 1920</b> untuk vertikal TikTok/Reels atau <b>1920 x 1080</b>).</li>
+      <li>Klik OK. Overlay otomatis tampil transparan.</li>
     </ol>
   </div>
 </div>
 
-<!-- OVERLAY RENDER TARGETS (hidden unless URL has ?ov=) -->
+<!-- OVERLAY RENDER TARGETS -->
 <div id="ov-runningtext" style="display:none"></div>
 <div id="ov-wa" style="display:none"></div>
 <div id="ov-bg" style="display:none"></div>
@@ -679,6 +742,10 @@ document.getElementById('bg-speed').oninput = e => {
   const labels = {1:'Lambat', 2:'Sedang', 3:'Cepat'};
   document.getElementById('bg-speed-val').textContent = labels[e.target.value];
 };
+
+// Auto switch ke Kustom jika user memilih warna di animtitle
+document.getElementById('at-c1').onchange = () => document.getElementById('at-theme').value = "5";
+document.getElementById('at-c2').onchange = () => document.getElementById('at-theme').value = "5";
 
 function b64(str) { return btoa(unescape(encodeURIComponent(str))); }
 
@@ -757,10 +824,12 @@ function generateLink(type) {
     p.set('pos', document.getElementById('lb-pos').value);
   } else if (type === 'camcircle') {
     p.set('size', document.getElementById('cc-size').value);
+    p.set('anim', document.getElementById('cc-anim').value);
     p.set('pos', document.getElementById('cc-pos').value);
     p.set('bordercolor', document.getElementById('cc-bordercolor').value);
     p.set('borderthick', document.getElementById('cc-borderthick').value);
   } else if (type === 'splitline') {
+    p.set('anim', document.getElementById('split-anim').value);
     p.set('splitpos', document.getElementById('split-pos').value);
     p.set('color', document.getElementById('split-color').value);
     p.set('thick', document.getElementById('split-thick').value);
@@ -781,7 +850,7 @@ function generateLink(type) {
     navigator.clipboard.writeText(url).then(() => {
       box.classList.add('copied');
       const old = box.textContent;
-      box.textContent = 'Tersalin! ' + old;
+      box.textContent = 'Tersalin ke Clipboard! ' + old;
       setTimeout(() => { box.textContent = old; box.classList.remove('copied'); }, 1500);
     });
   };
@@ -792,67 +861,174 @@ function generateLink(type) {
   prevBtn.style.display = 'block';
   prevBtn.onclick = () => { location.href = url; };
 
-  // try clipboard immediately too
   navigator.clipboard.writeText(url).catch(()=>{});
 }
 
-// ---------- EDITOR STATE (bertahan setelah pratinjau dan refresh) ----------
+// ---------- PRESET MANAGER & PERSISTENCE ----------
+const PRESET_STORAGE_KEY = 'overlay_studio_saved_presets_v1';
+const STATE_STORAGE_KEY = 'overlay-studio-state-v1';
+
+function getAllFormState() {
+  const fields = {};
+  document.querySelectorAll('#editor input[id], #editor select[id], #editor textarea[id]').forEach(el => {
+    fields[el.id] = el.value;
+  });
+  const posBtn = document.querySelector('.pos-btn.active');
+  const waBtn = document.querySelector('.wa-effect.active');
+  return {
+    fields,
+    pos: posBtn ? posBtn.dataset.val : 'bottom',
+    effect: waBtn ? waBtn.dataset.val : 'pulse'
+  };
+}
+
+function applyFormState(state) {
+  if (!state || !state.fields) return;
+  Object.keys(state.fields).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = state.fields[id];
+      if (el.type === 'range' && el.oninput) el.oninput({ target: el });
+    }
+  });
+  if (state.pos) {
+    const btn = document.querySelector(`.pos-btn[data-val="${state.pos}"]`);
+    if (btn) { document.querySelectorAll('.pos-btn').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); }
+  }
+  if (state.effect) {
+    const btn = document.querySelector(`.wa-effect[data-val="${state.effect}"]`);
+    if (btn) { document.querySelectorAll('.wa-effect').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); }
+  }
+}
+
+function renderPresetList() {
+  const container = document.getElementById('preset-list-container');
+  let presets = {};
+  try { presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {}; } catch(e){}
+  
+  const keys = Object.keys(presets);
+  if (keys.length === 0) {
+    container.innerHTML = '<div class="hint">Belum ada preset tersimpan.</div>';
+    return;
+  }
+  
+  let html = '';
+  keys.forEach(name => {
+    html += `
+      <div class="preset-item">
+        <span class="preset-item-name">📌 ${name.replace(/</g,'&lt;')}</span>
+        <div class="preset-actions">
+          <button class="btn-sec" onclick="loadPreset('${encodeURIComponent(name)}')">Gunakan</button>
+          <button class="btn-sec btn-danger" onclick="deletePreset('${encodeURIComponent(name)}')">Hapus</button>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function saveCurrentPreset() {
+  const nameInput = document.getElementById('preset-name-input');
+  const name = nameInput.value.trim();
+  if (!name) { alert('Masukkan nama preset terlebih dahulu!'); return; }
+  
+  let presets = {};
+  try { presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {}; } catch(e){}
+  presets[name] = getAllFormState();
+  localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+  nameInput.value = '';
+  renderPresetList();
+  alert(`Preset "${name}" berhasil disimpan!`);
+}
+
+function loadPreset(encName) {
+  const name = decodeURIComponent(encName);
+  let presets = {};
+  try { presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {}; } catch(e){}
+  if (presets[name]) {
+    applyFormState(presets[name]);
+    alert(`Preset "${name}" berhasil diterapkan!`);
+  }
+}
+
+function deletePreset(encName) {
+  const name = decodeURIComponent(encName);
+  if (!confirm(`Yakin ingin menghapus preset "${name}"?`)) return;
+  let presets = {};
+  try { presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {}; } catch(e){}
+  delete presets[name];
+  localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+  renderPresetList();
+}
+
+function exportPresetsJSON() {
+  let presets = {};
+  try { presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY)) || {}; } catch(e){}
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presets, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "overlay_studio_presets.json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+function importPresetsJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (typeof imported === 'object') {
+        localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(imported));
+        renderPresetList();
+        alert('Presets berhasil diimpor!');
+      }
+    } catch(err) {
+      alert('File JSON tidak valid!');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Autosave editor state
 (function() {
   if (new URLSearchParams(location.search).get('ov')) return;
-  const KEY = 'overlay-studio-state-v1';
-  const controls = () => document.querySelectorAll('#editor input[id], #editor select[id], #editor textarea[id]');
-  const groupValue = sel => { const b = document.querySelector(sel + '.active'); return b ? b.dataset.val : null; };
-
-  function save() {
+  
+  function saveState() {
+    const state = getAllFormState();
     const tab = document.querySelector('.tab.active');
-    const state = { tab: tab ? tab.dataset.tab : null, fields: {}, pos: groupValue('.pos-btn'), effect: groupValue('.wa-effect') };
-    controls().forEach(el => { state.fields[el.id] = el.value; });
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    state.tab = tab ? tab.dataset.tab : 'runningtext';
+    try { localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
-  function restore() {
+  function restoreState() {
     let state;
-    try { state = JSON.parse(localStorage.getItem(KEY)); } catch (e) { return; }
-    if (!state || typeof state !== 'object') return;
-    controls().forEach(el => {
-      const v = state.fields && state.fields[el.id];
-      if (typeof v !== 'string') return;
-      if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === v)) return;
-      el.value = v;
-      if (el.type === 'range' && el.oninput) el.oninput({ target: el });
-    });
-    [['.pos-btn', state.pos], ['.wa-effect', state.effect]].forEach(([sel, val]) => {
-      const btn = val && document.querySelector(sel + '[data-val="' + val + '"]');
-      if (!btn) return;
-      document.querySelectorAll(sel).forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
-    });
-    const tab = state.tab && document.querySelector('.tab[data-tab="' + state.tab + '"]');
-    if (tab) {
-      tab.click();
-      tab.scrollIntoView({ inline: 'center', block: 'nearest' });
-    }
+    try { state = JSON.parse(localStorage.getItem(STATE_STORAGE_KEY)); } catch (e) {}
+    if (state) applyFormState(state);
+    renderPresetList();
   }
 
-  restore();
-  document.addEventListener('input', save);
-  document.addEventListener('change', save);
-  document.addEventListener('click', e => { if (e.target.closest('.tab, .segment button')) save(); });
+  restoreState();
+  document.addEventListener('input', saveState);
+  document.addEventListener('change', saveState);
+  document.addEventListener('click', e => { if (e.target.closest('.tab, .segment button')) saveState(); });
 })();
 
 // ---------- OVERLAY RENDER MODE ----------
 (function() {
   const params = new URLSearchParams(location.search);
   const ov = params.get('ov');
-  if (!ov) return; // editor mode, do nothing more
+  if (!ov) return;
 
   document.getElementById('editor').style.display = 'none';
   document.documentElement.style.background = 'transparent';
   document.body.style.background = 'transparent';
 
   const backBtn = document.createElement('button');
-  backBtn.textContent = '← Editor';
-  backBtn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;padding:8px 14px;border-radius:8px;border:1px solid #444;background:rgba(0,0,0,0.6);color:#fff;font-size:13px;font-family:sans-serif;';
+  backBtn.textContent = '← Editor Studio';
+  backBtn.style.cssText = 'position:fixed;top:10px;left:10px;z-index:9999;padding:8px 14px;border-radius:8px;border:1px solid #444;background:rgba(0,0,0,0.7);color:#fff;font-size:13px;font-family:sans-serif;cursor:pointer;';
   backBtn.onclick = () => { location.href = baseUrl(); };
   document.body.appendChild(backBtn);
 
@@ -880,18 +1056,14 @@ function generateLink(type) {
         .rt-bar {
           position: fixed; left:0; right:0; ${pos === 'top' ? 'top:0;' : 'bottom:0;'}
           background: ${hexToRgba(bgcolor, opacity)};
-          padding: 14px 0;
-          overflow: hidden;
-          white-space: nowrap;
+          padding: 14px 0; overflow: hidden; white-space: nowrap;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .rt-track {
-          display: inline-block;
-          white-space: nowrap;
+          display: inline-block; white-space: nowrap;
           animation: rt-scroll ${speed}s linear infinite;
-          font-size: ${size}px;
-          color: ${color};
-          font-family: -apple-system, sans-serif;
-          font-weight: 600;
+          font-size: ${size}px; color: ${color};
+          font-family: -apple-system, sans-serif; font-weight: 600;
         }
         @keyframes rt-scroll {
           from { transform: translateX(100vw); }
@@ -922,6 +1094,8 @@ function generateLink(type) {
       ? 'animation: wa-pulse 1.6s ease-in-out infinite;'
       : effect === 'bounce'
       ? 'animation: wa-bounce 1.4s ease-in-out infinite;'
+      : effect === 'glow'
+      ? 'animation: wa-glow 2s infinite;'
       : '';
 
     el.innerHTML = `
@@ -929,25 +1103,16 @@ function generateLink(type) {
         html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
         .wa-badge {
           position: fixed; ${posCss}
-          background: ${bgcolor};
-          color: ${color};
-          padding: 14px 22px;
-          border-radius: 16px;
-          font-family: -apple-system, sans-serif;
-          text-align: center;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-          ${animCss}
+          background: ${bgcolor}; color: ${color};
+          padding: 14px 22px; border-radius: 16px;
+          font-family: -apple-system, sans-serif; text-align: center;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.35); ${animCss}
         }
         .wa-label { font-size: 13px; opacity: 0.9; font-weight: 500; margin-bottom: 2px; }
         .wa-number { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
-        @keyframes wa-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        @keyframes wa-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-12px); }
-        }
+        @keyframes wa-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes wa-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes wa-glow { 0%, 100% { box-shadow: 0 0 10px ${bgcolor}; } 50% { box-shadow: 0 0 25px ${bgcolor}, 0 0 40px ${bgcolor}; } }
       </style>
       <div class="wa-badge">
         ${label ? `<div class="wa-label">${label.replace(/</g,'&lt;')}</div>` : ''}
@@ -980,12 +1145,7 @@ function generateLink(type) {
         <style>
           html, body { margin:0; padding:0; overflow:hidden; background:transparent; width:100vw; height:100vh; }
           .p { position:absolute; bottom:-20px; border-radius:50%; opacity:0.7; animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite; }
-          @keyframes floatUp {
-            from { transform: translateY(0) translateX(0); opacity:0; }
-            10% { opacity:0.7; }
-            90% { opacity:0.7; }
-            to { transform: translateY(-110vh) translateX(30px); opacity:0; }
-          }
+          @keyframes floatUp { from { transform: translateY(0) translateX(0); opacity:0; } 10% { opacity:0.7; } 90% { opacity:0.7; } to { transform: translateY(-110vh) translateX(30px); opacity:0; } }
         </style>
         <div style="position:fixed; inset:0;">${dots}</div>
       `;
@@ -994,11 +1154,7 @@ function generateLink(type) {
         <style>
           html, body { margin:0; padding:0; overflow:hidden; }
           .g { position:fixed; inset:0; background: linear-gradient(120deg, ${c1}, ${c2}, ${c1}); background-size: 300% 300%; animation: gmove ${dur}s ease infinite; opacity:0.55; }
-          @keyframes gmove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
+          @keyframes gmove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         </style>
         <div class="g"></div>
       `;
@@ -1017,10 +1173,7 @@ function generateLink(type) {
         <style>
           html, body { margin:0; padding:0; overflow:hidden; }
           .bk { position:absolute; border-radius:50%; filter: blur(6px); opacity:0.35; animation-name: bkfloat; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
-          @keyframes bkfloat {
-            0%, 100% { transform: translate(0,0) scale(1); }
-            50% { transform: translate(20px,-25px) scale(1.15); }
-          }
+          @keyframes bkfloat { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px,-25px) scale(1.15); } }
         </style>
         <div style="position:fixed; inset:0;">${circles}</div>
       `;
@@ -1031,13 +1184,9 @@ function generateLink(type) {
           .grid {
             position:fixed; inset:-50%; width:200%; height:200%;
             background-image: linear-gradient(${c1}55 1px, transparent 1px), linear-gradient(90deg, ${c1}55 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: gridmove ${dur}s linear infinite;
+            background-size: 60px 60px; animation: gridmove ${dur}s linear infinite;
           }
-          @keyframes gridmove {
-            from { transform: translate(0,0); }
-            to { transform: translate(60px,60px); }
-          }
+          @keyframes gridmove { from { transform: translate(0,0); } to { transform: translate(60px,60px); } }
         </style>
         <div class="grid"></div>
       `;
@@ -1092,8 +1241,7 @@ function generateLink(type) {
       const s = Math.floor(diff / 1000);
       out.textContent = d + 'h ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
-    tick();
-    setInterval(tick, 1000);
+    tick(); setInterval(tick, 1000);
   }
 
   if (ov === 'slot') {
@@ -1125,10 +1273,7 @@ function generateLink(type) {
         }
         .sl-label { font-size: 12px; opacity: 0.9; font-weight: 500; }
         .sl-num { font-size: 26px; font-weight: 700; }
-        @keyframes sl-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.04); }
-        }
+        @keyframes sl-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
       </style>
       <div class="sl-box">
         <div class="sl-label">${label.replace(/</g,'&lt;')}</div>
@@ -1156,16 +1301,12 @@ function generateLink(type) {
           padding: 16px 26px; border-radius: 14px; max-width: 90vw;
           font-family: -apple-system, sans-serif;
           box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-          animation: lt-in 0.6s ease-out;
-          text-align: center;
+          animation: lt-in 0.6s ease-out; text-align: center;
         }
         .lt-nama { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .lt-meta { font-size: 15px; opacity: 0.9; margin-bottom: 2px; }
         .lt-fasilitas { font-size: 13px; opacity: 0.75; margin-top: 4px; }
-        @keyframes lt-in {
-          from { transform: translateY(40px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes lt-in { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       </style>
       <div class="lt-wrap">
         <div class="lt-box">
@@ -1232,6 +1373,7 @@ function generateLink(type) {
           background: ${bgcolor}; color: ${color};
           padding: 10px 0; display:flex; justify-content:center; gap:28px;
           font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .sb-item { display:flex; align-items:center; gap:6px; }
       </style>
@@ -1262,27 +1404,11 @@ function generateLink(type) {
           box-shadow: 0 10px 30px rgba(0,0,0,0.4);
           animation: al-pop 0.5s ease-out, al-out 0.5s ease-in ${durasi}s forwards;
         }
-        @keyframes al-pop {
-          from { transform: scale(0.7); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        @keyframes al-out {
-          from { transform: scale(1); opacity: 1; }
-          to { transform: scale(0.85); opacity: 0; }
-        }
-        .al-retrigger {
-          position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-          padding: 6px 12px; border-radius: 8px; background: rgba(0,0,0,0.5);
-          color: #fff; font-size: 12px; font-family: sans-serif; border: 1px solid #555;
-        }
+        @keyframes al-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes al-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.85); opacity: 0; } }
       </style>
       <div class="al-wrap" id="al-wrap"><div class="al-box" id="al-box">${text.replace(/</g,'&lt;')}</div></div>
-      <button class="al-retrigger" id="al-retrigger">Tampilkan lagi</button>
     `;
-    document.getElementById('al-retrigger').onclick = () => {
-      const wrap = document.getElementById('al-wrap');
-      wrap.innerHTML = `<div class="al-box" style="background:${bgcolor};color:${color};padding:18px 32px;border-radius:16px;font-family:-apple-system, sans-serif;font-size:22px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,0.4);animation:al-pop 0.5s ease-out, al-out 0.5s ease-in ${durasi}s forwards;">${text.replace(/</g,'&lt;')}</div>`;
-    };
   }
 
   if (ov === 'frame') {
@@ -1292,8 +1418,6 @@ function generateLink(type) {
     const style = params.get('style') || 'full';
     const thick = params.get('thick') || '6';
 
-    let borderCss = '';
-    let sparkleHtml = '';
     if (style === 'corners') {
       el.innerHTML = `
         <style>
@@ -1313,10 +1437,7 @@ function generateLink(type) {
           html, body { margin:0; padding:0; overflow:hidden; }
           .fr-full { position: fixed; inset: 0; border: ${thick}px solid ${color}; box-sizing: border-box; }
           .fr-glow { position: fixed; inset: 0; border: ${thick}px solid ${color}; box-sizing: border-box; opacity: 0.5; animation: fr-glow 2s ease-in-out infinite; filter: blur(4px); }
-          @keyframes fr-glow {
-            0%, 100% { opacity: 0.25; }
-            50% { opacity: 0.75; }
-          }
+          @keyframes fr-glow { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; } }
         </style>
         <div class="fr-full"></div><div class="fr-glow"></div>
       `;
@@ -1350,17 +1471,24 @@ function generateLink(type) {
         .lb-badge {
           position: fixed; ${posCss}
           background: ${bgcolor}; color: ${color};
-          padding: 12px 22px; border-radius: 999px;
+          padding: 10px 20px; border-radius: 999px;
           font-family: -apple-system, sans-serif; font-size: 16px; font-weight: 700;
           display: flex; align-items: center; gap: 10px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.35);
         }
-        .lb-icon { font-size: 18px; }
+        .lb-red-dot {
+          width: 12px; height: 12px; background-color: #ef4444; border-radius: 50%;
+          display: inline-block; box-shadow: 0 0 10px #ef4444;
+          animation: lb-blink 1.2s ease-in-out infinite;
+        }
+        @keyframes lb-blink {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.2; transform: scale(0.8); }
+        }
       </style>
       <div class="lb-badge">
-        <span class="lb-icon">&#128172;</span>
+        <span class="lb-red-dot"></span>
         <span>${text.replace(/</g,'&lt;')}</span>
-        <span class="lb-icon">&#128172;</span>
       </div>
     `;
   }
@@ -1369,8 +1497,9 @@ function generateLink(type) {
     const el = document.getElementById('ov-camcircle');
     el.style.display = 'block';
     const size = params.get('size') || '260';
+    const anim = params.get('anim') || 'glow-spin';
     const pos = params.get('pos') || 'bottom-right';
-    const bordercolor = params.get('bordercolor') || '#ffffff';
+    const bordercolor = params.get('bordercolor') || '#22c55e';
     const borderthick = params.get('borderthick') || '6';
     const posCss = {
       'bottom-right': 'bottom:40px; right:40px;',
@@ -1379,16 +1508,39 @@ function generateLink(type) {
       'top-left': 'top:40px; left:40px;'
     }[pos];
 
+    let animStyle = '';
+    if (anim === 'glow-spin') {
+      animStyle = `
+        border: ${borderthick}px solid ${bordercolor};
+        box-shadow: 0 0 20px ${bordercolor}, inset 0 0 15px ${bordercolor};
+        animation: cc-rotate 6s linear infinite;
+      `;
+    } else if (anim === 'cyber-tech') {
+      animStyle = `
+        border: ${borderthick}px dashed ${bordercolor};
+        box-shadow: 0 0 15px ${bordercolor};
+        animation: cc-rotate 12s linear infinite;
+      `;
+    } else if (anim === 'pulse-wave') {
+      animStyle = `
+        border: ${borderthick}px solid ${bordercolor};
+        animation: cc-pulse 2s ease-in-out infinite;
+      `;
+    } else {
+      animStyle = `border: ${borderthick}px solid ${bordercolor}; box-shadow: 0 8px 24px rgba(0,0,0,0.4);`;
+    }
+
     el.innerHTML = `
       <style>
         html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
         .cc-ring {
           position: fixed; ${posCss}
           width: ${size}px; height: ${size}px; border-radius: 50%;
-          border: ${borderthick}px solid ${bordercolor};
           box-sizing: border-box;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+          ${animStyle}
         }
+        @keyframes cc-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes cc-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 10px ${bordercolor}; } 50% { transform: scale(1.04); box-shadow: 0 0 25px ${bordercolor}; } }
       </style>
       <div class="cc-ring"></div>
     `;
@@ -1397,21 +1549,54 @@ function generateLink(type) {
   if (ov === 'splitline') {
     const el = document.getElementById('ov-splitline');
     el.style.display = 'block';
+    const anim = params.get('anim') || 'laser-beam';
     const splitpos = params.get('splitpos') || '50';
-    const color = params.get('color') || '#ffffff';
+    const color = params.get('color') || '#3b82f6';
     const thick = params.get('thick') || '6';
+
+    let extraCss = '';
+    let extraHtml = '';
+    if (anim === 'laser-beam') {
+      extraCss = `
+        background: ${color};
+        box-shadow: 0 0 12px ${color};
+        overflow: hidden;
+      `;
+      extraHtml = `<div class="sp-laser"></div>`;
+    } else if (anim === 'rgb-flow') {
+      extraCss = `
+        background: linear-gradient(90deg, ${color}, #ec4899, #3b82f6, ${color});
+        background-size: 300% 100%;
+        animation: sp-flow 3s linear infinite;
+        box-shadow: 0 0 12px ${color};
+      `;
+    } else if (anim === 'neon-pulse') {
+      extraCss = `
+        background: ${color};
+        animation: sp-pulse 1.8s ease-in-out infinite;
+      `;
+    } else {
+      extraCss = `background: ${color}; box-shadow: 0 2px 10px rgba(0,0,0,0.3);`;
+    }
 
     el.innerHTML = `
       <style>
         html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
         .sp-line {
           position: fixed; left: 0; right: 0; top: ${splitpos}%;
-          height: ${thick}px; background: ${color};
-          transform: translateY(-50%);
-          box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+          height: ${thick}px; transform: translateY(-50%);
+          ${extraCss}
         }
+        .sp-laser {
+          position: absolute; top:0; bottom:0; width: 120px;
+          background: linear-gradient(90deg, transparent, #ffffff, transparent);
+          animation: sp-sweep 2.5s ease-in-out infinite;
+        }
+        @keyframes sp-sweep { 0% { left: -150px; } 100% { left: 100vw; } }
+        @keyframes sp-flow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+        @keyframes sp-pulse { 0%, 100% { opacity: 0.6; box-shadow: 0 0 8px ${color}; } 50% { opacity: 1; box-shadow: 0 0 20px ${color}; } }
       </style>
-      <div class="sp-line"></div>
+      <div class="sp-line">${extraHtml}</div>
     `;
   }
 
@@ -1457,10 +1642,18 @@ function generateLink(type) {
     const raw = unb64(params.get('text') || '');
     let words = raw.toUpperCase().replace(/[^A-Z ]/g, '').trim().split(/\s+/).filter(Boolean);
     if (!words.length) words = ['CITO', 'ADVENTURE'];
-    const theme = parseInt(params.get('theme') || '0');
+    
+    const theme = parseInt(params.get('theme') || '5');
     const c1 = isHex(params.get('c1')) ? params.get('c1') : '#973bed';
     const c2 = isHex(params.get('c2')) ? params.get('c2') : '#007cff';
-    const pal = AT_PAL[theme] || {g:[[c1,c2],[c1,c2],[c1,c2]], o:[c1,c2]};
+    
+    let pal;
+    if (theme === 5) {
+      pal = { g: [[c1,c2],[c2,c1],[c1,c2]], o: [c1,c2] };
+    } else {
+      pal = AT_PAL[theme] || AT_PAL[0];
+    }
+    
     const maxSize = Math.max(30, Math.min(300, parseInt(params.get('size') || '100') || 100));
     const pos = params.get('pos') || 'center';
     const posCss = {
@@ -1474,11 +1667,11 @@ function generateLink(type) {
     const rowsHtml = words.map(word => {
       const chars = word.split('');
       let units = 0;
-      chars.forEach(c => { units += (AT_L[c].w || 64) / 64; });
+      chars.forEach(c => { units += (AT_L[c] ? (AT_L[c].w || 64) : 64) / 64; });
       const size = Math.max(18, Math.min(maxSize, Math.floor(avail / (units + 0.1 * (chars.length - 1)))));
       const gap = Math.round(size * 0.1);
       const letters = chars.map(c => {
-        const l = AT_L[c], vx = l.x || 0, w = l.w || 64, isO = c === 'O';
+        const l = AT_L[c] || AT_L['A'], vx = l.x || 0, w = l.w || 64, isO = c === 'O';
         const i = idx++;
         const g = isO ? 'at-go' : 'at-g' + (i % 3);
         const cls = isO ? 'at-spin' : 'at-dash';
