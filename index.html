@@ -112,6 +112,7 @@
     <div class="tab" data-tab="livebadge">Live badge</div>
     <div class="tab" data-tab="camcircle">Kamera bulat</div>
     <div class="tab" data-tab="splitline">Garis pemisah</div>
+    <div class="tab" data-tab="animtitle">Judul animasi</div>
   </div>
 
   <!-- RUNNING TEXT -->
@@ -574,6 +575,60 @@
     <button class="preview-btn" id="preview-splitline" style="display:none">Lihat pratinjau</button>
   </div>
 
+  <!-- ANIMATED TITLE -->
+  <div class="panel" id="panel-animtitle">
+    <div class="card">
+      <div class="row">
+        <label>Teks judul</label>
+        <input type="text" id="at-text" value="CITO ADVENTURE" maxlength="30" autocomplete="off">
+        <div class="hint">Hanya huruf A sampai Z dan spasi. Setiap kata tampil di baris sendiri.</div>
+      </div>
+      <div class="row">
+        <label>Tema warna</label>
+        <select id="at-theme">
+          <option value="0" selected>Asli</option>
+          <option value="1">Laut</option>
+          <option value="2">Sunset</option>
+          <option value="3">Neon</option>
+          <option value="4">Hutan</option>
+          <option value="5">Kustom (pakai dua warna di bawah)</option>
+        </select>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Warna awal (tema Kustom)</label>
+          <div class="color-row"><input type="color" id="at-c1" value="#973bed"></div>
+        </div>
+        <div>
+          <label>Warna akhir (tema Kustom)</label>
+          <div class="color-row"><input type="color" id="at-c2" value="#007cff"></div>
+        </div>
+      </div>
+      <div class="row two-col">
+        <div>
+          <label>Ukuran huruf</label>
+          <select id="at-size">
+            <option value="60">Kecil</option>
+            <option value="100" selected>Sedang</option>
+            <option value="160">Besar</option>
+          </select>
+        </div>
+        <div>
+          <label>Posisi</label>
+          <select id="at-pos">
+            <option value="center" selected>Tengah layar</option>
+            <option value="top-center">Tengah atas</option>
+            <option value="bottom-center">Tengah bawah</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Huruf digambar berulang-ulang di atas latar transparan, cocok untuk judul pembuka live atau logo animasi. Ukuran huruf otomatis mengecil kalau kata terlalu panjang untuk lebar layar.</div>
+    </div>
+    <button class="btn" onclick="generateLink('animtitle')">Buat link overlay</button>
+    <div class="link-box" id="link-animtitle"></div>
+    <button class="preview-btn" id="preview-animtitle" style="display:none">Lihat pratinjau</button>
+  </div>
+
   <div class="obs-steps">
     <h3>Cara pasang di OBS</h3>
     <ol>
@@ -601,6 +656,7 @@
 <div id="ov-livebadge" style="display:none"></div>
 <div id="ov-camcircle" style="display:none"></div>
 <div id="ov-splitline" style="display:none"></div>
+<div id="ov-animtitle" style="display:none"></div>
 
 <script>
 // ---------- TAB SWITCHING ----------
@@ -708,6 +764,13 @@ function generateLink(type) {
     p.set('splitpos', document.getElementById('split-pos').value);
     p.set('color', document.getElementById('split-color').value);
     p.set('thick', document.getElementById('split-thick').value);
+  } else if (type === 'animtitle') {
+    p.set('text', b64(document.getElementById('at-text').value || ''));
+    p.set('theme', document.getElementById('at-theme').value);
+    p.set('c1', document.getElementById('at-c1').value);
+    p.set('c2', document.getElementById('at-c2').value);
+    p.set('size', document.getElementById('at-size').value);
+    p.set('pos', document.getElementById('at-pos').value);
   }
 
   const url = baseUrl() + '?' + p.toString();
@@ -1305,6 +1368,103 @@ function generateLink(type) {
         }
       </style>
       <div class="sp-line"></div>
+    `;
+  }
+
+  if (ov === 'animtitle') {
+    const el = document.getElementById('ov-animtitle');
+    el.style.display = 'block';
+    const AT_L={
+    A:{d:'M 6 60 L 32 4 L 58 60 M 16 38 H 48'},
+    B:{d:'M 8 4 V 60 H 34 A 14 14 0 0 0 34 32 H 8 M 30 32 A 14 14 0 0 0 30 4 H 8'},
+    C:{d:'M 49 15 A 24 24 0 1 0 49 49'},
+    D:{d:'M 8 4 H 28 A 26 28 0 0 1 28 60 H 8 Z'},
+    E:{d:'M 54 4 H 10 V 60 H 54 M 10 32 H 46'},
+    F:{d:'M 54 4 H 10 V 60 M 10 32 H 44'},
+    G:{d:'M 49 15 A 24 24 0 1 0 56 32 H 34'},
+    H:{d:'M 8 4 V 60 M 56 4 V 60 M 8 32 H 56'},
+    I:{d:'M 32 4 V 60',x:20,w:24},
+    J:{d:'M 48 4 V 40 A 16 16 0 0 1 16 40'},
+    K:{d:'M 8 4 V 60 M 52 4 L 8 36 M 22 25 L 54 60'},
+    L:{d:'M 8 4 V 60 H 52'},
+    M:{d:'M 6 60 V 4 L 32 40 L 58 4 V 60'},
+    N:{d:'M 8 60 V 4 L 56 60 V 4'},
+    O:{d:'M 32 32 m 0 -27 a 27 27 0 1 1 0 54 a 27 27 0 1 1 0 -54'},
+    P:{d:'M 8 60 V 4 H 34 A 14 14 0 0 1 34 32 H 8'},
+    Q:{d:'M 32 32 m 0 -24 a 24 24 0 1 1 0 48 a 24 24 0 1 1 0 -48 M 40 42 L 56 58'},
+    R:{d:'M 8 60 V 4 H 32 A 14 14 0 0 1 32 32 H 8 M 30 32 L 54 60'},
+    S:{d:'M 50 14 C 44 4 14 4 14 20 C 14 34 50 28 50 44 C 50 60 20 60 14 50'},
+    T:{d:'M 6 4 H 58 M 32 4 V 60'},
+    U:{d:'M 8 4 V 34 A 24 24 0 0 0 56 34 V 4'},
+    V:{d:'M 6 4 L 32 60 L 58 4'},
+    W:{d:'M 4 4 L 18 60 L 32 24 L 46 60 L 60 4'},
+    X:{d:'M 8 4 L 56 60 M 56 4 L 8 60'},
+    Y:{d:'M 6 4 L 32 32 L 58 4 M 32 32 V 60'},
+    Z:{d:'M 8 4 H 56 L 8 60 H 56'}
+    };
+    const AT_PAL = [
+      {g:[['#973BED','#007CFF'],['#00E0ED','#00DA72'],['#FF8A00','#FF2D75']],o:['#FFC800','#FF00FF']},
+      {g:[['#00C6FF','#0072FF'],['#00E0ED','#185FA5'],['#5DCAA5','#0F6E56']],o:['#00E0ED','#973BED']},
+      {g:[['#FF8A00','#FF2D75'],['#FFC800','#FF5A30'],['#FF2D75','#973BED']],o:['#FFC800','#FF2D75']},
+      {g:[['#39FF14','#00E0ED'],['#FF00FF','#973BED'],['#FFF200','#39FF14']],o:['#00E0ED','#FF00FF']},
+      {g:[['#97C459','#3B6D11'],['#5DCAA5','#0F6E56'],['#FAC775','#BA7517']],o:['#97C459','#0F6E56']}
+    ];
+    const isHex = s => /^#[0-9a-fA-F]{6}$/.test(s || '');
+    const raw = unb64(params.get('text') || '');
+    let words = raw.toUpperCase().replace(/[^A-Z ]/g, '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) words = ['CITO', 'ADVENTURE'];
+    const theme = parseInt(params.get('theme') || '0');
+    const c1 = isHex(params.get('c1')) ? params.get('c1') : '#973bed';
+    const c2 = isHex(params.get('c2')) ? params.get('c2') : '#007cff';
+    const pal = AT_PAL[theme] || {g:[[c1,c2],[c1,c2],[c1,c2]], o:[c1,c2]};
+    const maxSize = Math.max(30, Math.min(300, parseInt(params.get('size') || '100') || 100));
+    const pos = params.get('pos') || 'center';
+    const posCss = {
+      'top-center': 'top:5vh; left:50%; transform:translateX(-50%);',
+      'center': 'top:50%; left:50%; transform:translate(-50%,-50%);',
+      'bottom-center': 'bottom:5vh; left:50%; transform:translateX(-50%);'
+    }[pos] || 'top:50%; left:50%; transform:translate(-50%,-50%);';
+    const avail = Math.max(200, Math.floor(window.innerWidth * 0.9));
+
+    let idx = 0;
+    const rowsHtml = words.map(word => {
+      const chars = word.split('');
+      let units = 0;
+      chars.forEach(c => { units += (AT_L[c].w || 64) / 64; });
+      const size = Math.max(18, Math.min(maxSize, Math.floor(avail / (units + 0.1 * (chars.length - 1)))));
+      const gap = Math.round(size * 0.1);
+      const letters = chars.map(c => {
+        const l = AT_L[c], vx = l.x || 0, w = l.w || 64, isO = c === 'O';
+        const i = idx++;
+        const g = isO ? 'at-go' : 'at-g' + (i % 3);
+        const cls = isO ? 'at-spin' : 'at-dash';
+        const sw = isO ? 10 : 8;
+        const delay = isO ? 0 : -(i * 0.12);
+        return '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="' + vx + ' 0 ' + w + ' 64" height="' + size + '" width="' + (size * w / 64) + '" style="display:block"><path stroke-linejoin="round" stroke-linecap="round" stroke-width="' + sw + '" stroke="url(#' + g + ')" d="' + l.d + '" class="' + cls + '" pathLength="360" style="animation-delay:' + delay + 's"></path></svg>';
+      }).join('');
+      return '<div class="at-row" style="gap:' + gap + 'px">' + letters + '</div>';
+    }).join('');
+    const rowGap = Math.round(Math.min(maxSize, 100) * 0.3);
+
+    const stops = (id, a, b) => '<linearGradient gradientUnits="userSpaceOnUse" y2="2" x2="0" y1="62" x1="0" id="' + id + '"><stop stop-color="' + a + '"></stop><stop stop-color="' + b + '" offset="1"></stop></linearGradient>';
+    const defs = stops('at-g0', pal.g[0][0], pal.g[0][1]) + stops('at-g1', pal.g[1][0], pal.g[1][1]) + stops('at-g2', pal.g[2][0], pal.g[2][1]) +
+      '<linearGradient gradientUnits="userSpaceOnUse" y2="0" x2="0" y1="64" x1="0" id="at-go"><stop stop-color="' + pal.o[0] + '"></stop><stop stop-color="' + pal.o[1] + '" offset="1"></stop>' +
+      '<animateTransform repeatCount="indefinite" keySplines=".42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1;.42,0,.58,1" keyTimes="0; 0.125; 0.25; 0.375; 0.5; 0.625; 0.75; 0.875; 1" dur="8s" values="0 32 32;-270 32 32;-270 32 32;-540 32 32;-540 32 32;-810 32 32;-810 32 32;-1080 32 32;-1080 32 32" type="rotate" attributeName="gradientTransform"></animateTransform></linearGradient>';
+
+    el.innerHTML = `
+      <style>
+        html, body { margin:0; padding:0; background:transparent; overflow:hidden; }
+        .at-wrap { position: fixed; ${posCss} display:flex; flex-direction:column; align-items:center; gap:${rowGap}px; }
+        .at-row { display:flex; align-items:center; justify-content:center; }
+        .at-dash { animation: at-dashArray 2s ease-in-out infinite, at-dashOffset 2s linear infinite; }
+        .at-spin { animation: at-spinDash 2s ease-in-out infinite, at-spin 8s ease-in-out infinite, at-dashOffset 2s linear infinite; transform-origin: center; }
+        @keyframes at-dashArray { 0%{stroke-dasharray:0 1 359 0} 50%{stroke-dasharray:0 359 1 0} 100%{stroke-dasharray:359 1 0 0} }
+        @keyframes at-spinDash { 0%{stroke-dasharray:270 90} 50%{stroke-dasharray:0 360} 100%{stroke-dasharray:270 90} }
+        @keyframes at-dashOffset { 0%{stroke-dashoffset:365} 100%{stroke-dashoffset:5} }
+        @keyframes at-spin { 0%{rotate:0deg} 12.5%,25%{rotate:270deg} 37.5%,50%{rotate:540deg} 62.5%,75%{rotate:810deg} 87.5%,100%{rotate:1080deg} }
+      </style>
+      <svg width="0" height="0" viewBox="0 0 64 64" style="position:absolute"><defs>${defs}</defs></svg>
+      <div class="at-wrap">${rowsHtml}</div>
     `;
   }
 })();
